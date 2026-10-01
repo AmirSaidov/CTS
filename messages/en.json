@@ -1,0 +1,11 @@
+{
+  "nav": {
+    "tournaments": "Tournaments",
+    "schedule": "Schedule",
+    "rankings": "Rankings",
+    "news": "News",
+    "pricing": "Pricing",
+    "login": "Log in",
+    "startFree": "Start free"
+  }
+}
