@@ -1,6 +1,6 @@
 """
 JWT с claims для роутинга фронта (раздел 13.1): is_player, is_organizer, is_platform_admin,
-email_verified — src/proxy.ts читает их без проверки подписи. Права всё равно проверяет Django.
+email_verified — frontend/src/proxy.ts читает их без проверки подписи. Права всё равно проверяет Django.
 """
 
 from rest_framework_simplejwt.tokens import AccessToken, RefreshToken

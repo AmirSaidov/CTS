@@ -1,6 +1,6 @@
 """
 Матрица прав сотрудников организации (экран 42) — одна таблица в коде.
-Отдаётся фронту в /auth/me/ списком разрешений. Имена — как в src/shared/lib/permissions.ts фронта.
+Отдаётся фронту в /auth/me/ списком разрешений. Имена — как в frontend/src/shared/lib/permissions.ts фронта.
 """
 
 from .models import OrgRole
