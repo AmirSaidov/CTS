@@ -1,10 +1,10 @@
 """
 Контрактные тесты: запросы ровно как во фронте.
 
-- пути, методы и тела — из src/shared/api/endpoints.ts (auth, me, games, plans);
-- преобразование ключей и заголовки — как в src/shared/api/client.ts
+- пути, методы и тела — из frontend/src/shared/api/endpoints.ts (auth, me, games, plans);
+- преобразование ключей и заголовки — как в frontend/src/shared/api/client.ts
   (тело camelCase → snake_case, ответ snake_case → camelCase, credentials: include);
-- ожидаемые поля ответов — из src/shared/api/types.ts.
+- ожидаемые поля ответов — из frontend/src/shared/api/types.ts.
 
 Если фронт поменяет контракт, эти тесты нужно обновить вместе с ним.
 """
@@ -24,7 +24,7 @@ from apps.orgs.services import create_organization
 pytestmark = pytest.mark.django_db
 
 
-# ───── копия src/shared/api/client.ts ─────
+# ───── копия frontend/src/shared/api/client.ts ─────
 
 
 def to_camel(s: str) -> str:
@@ -237,7 +237,7 @@ def test_me_for_organizer_matches_session_user(seeded):
     for key in ("tournaments", "staff", "mailings"):
         used, cap = org["limits"][key]
         assert isinstance(used, int) and (cap is None or isinstance(cap, int))
-    # имена прав — как в src/shared/lib/permissions.ts
+    # имена прав — как в frontend/src/shared/lib/permissions.ts
     assert set(org["permissions"]) <= {
         "tournaments.manage",
         "applications.decide",

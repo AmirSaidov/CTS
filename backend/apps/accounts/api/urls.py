@@ -12,7 +12,7 @@ auth_urlpatterns = [
     path("verify/resend/", views.VerifyResendView.as_view(), name="auth-verify-resend"),
     path("password/forgot/", views.ForgotView.as_view(), name="auth-password-forgot"),
     path("password/reset/", views.ResetView.as_view(), name="auth-password-reset"),
-    # фронт запрашивает текущего пользователя по /auth/me/ (src/shared/api/endpoints.ts)
+    # фронт запрашивает текущего пользователя по /auth/me/ (frontend/src/shared/api/endpoints.ts)
     path("me/", views.MeView.as_view(), name="auth-me"),
 ]
 
