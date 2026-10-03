@@ -1,0 +1,61 @@
+# CI бэкенда (раздел 11): линт, типы, тесты, проверка миграций, сборка OpenAPI, аудит зависимостей.
+# GitHub читает workflow только из корня репозитория — перенесите файл в /.github/workflows/.
+name: backend
+
+on:
+  push:
+    paths: ["backend/**"]
+  pull_request:
+    paths: ["backend/**"]
+
+defaults:
+  run:
+    working-directory: backend
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: cts
+          POSTGRES_USER: cts
+          POSTGRES_PASSWORD: cts
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U cts -d cts" --health-interval 5s --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+    env:
+      DJANGO_SECRET_KEY: ci-secret-key-that-is-long-enough-for-hmac-sha256
+      DATABASE_URL: postgres://cts:cts@localhost:5432/cts
+      REDIS_URL: redis://localhost:6379/0
+      CELERY_TASK_ALWAYS_EAGER: "true"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements/*.txt
+      - run: pip install -r requirements/dev.txt
+      - name: Ruff
+        run: ruff check . && ruff format --check .
+      - name: Mypy
+        run: mypy apps config
+      - name: Миграции без пропусков
+        run: python manage.py makemigrations --check --dry-run
+      - name: Тесты
+        run: pytest --cov --cov-report=term
+      - name: OpenAPI-схема собирается без ошибок
+        run: python manage.py spectacular --validate --fail-on-warn --file /tmp/schema.yml
+      - name: Аудит зависимостей
+        run: pip-audit -r requirements/base.txt
+      - name: Проверка настроек production
+        env:
+          ENVIRONMENT: production
+          DJANGO_DEBUG: "false"
+          DJANGO_ALLOWED_HOSTS: api.cts.gg
+        run: python manage.py check --deploy --fail-level WARNING

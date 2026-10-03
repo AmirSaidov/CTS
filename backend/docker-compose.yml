@@ -1,0 +1,64 @@
+# Локальное окружение (раздел 11): web, celery-worker, celery-beat, PostgreSQL, Redis.
+#   docker compose up --build
+#   docker compose exec web python manage.py seed --demo
+
+x-app: &app
+  build:
+    context: .
+    args:
+      REQUIREMENTS: dev
+  env_file: .env
+  environment:
+    DATABASE_URL: postgres://cts:cts@db:5432/cts
+    REDIS_URL: redis://redis:6379/0
+    CELERY_TASK_ALWAYS_EAGER: "false"
+    DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1,web
+  volumes:
+    - .:/app
+  depends_on:
+    db:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: cts
+      POSTGRES_USER: cts
+      POSTGRES_PASSWORD: cts
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cts -d cts"]
+      interval: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      retries: 10
+
+  web:
+    <<: *app
+    command: sh -c "python manage.py migrate --noinput && python manage.py runserver 0.0.0.0:8000"
+    ports:
+      - "8000:8000"
+
+  celery-worker:
+    <<: *app
+    command: celery -A config worker -l info
+
+  celery-beat:
+    <<: *app
+    command: celery -A config beat -l info
+
+volumes:
+  pgdata:

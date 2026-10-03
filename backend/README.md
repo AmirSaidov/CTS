@@ -1,0 +1,109 @@
+# CTS — бэкенд
+
+Django REST API для CRM киберспортивных турниров. ТЗ — [`backend-tz.md`](backend-tz.md).
+Сделан **этап 1 «Фундамент»** (раздел 12 ТЗ).
+
+## Запуск без Docker
+
+Нужен Python 3.10+ (проверено на 3.12). Без `DATABASE_URL`/`REDIS_URL` проект работает на SQLite,
+кэше в памяти и синхронном Celery.
+
+```bash
+cd backend
+py -3.12 -m venv .venv
+.venv/Scripts/pip install -r requirements/dev.txt     # Linux/macOS: .venv/bin/...
+cp .env.example .env                                  # и задайте DJANGO_SECRET_KEY
+.venv/Scripts/python manage.py migrate
+.venv/Scripts/python manage.py seed --demo            # справочники + демо-пользователи
+.venv/Scripts/python manage.py runserver              # http://localhost:8000
+```
+
+- Swagger: http://localhost:8000/api/v1/docs/ · схема: `/api/v1/schema/` (фронт: `npm run api:types`)
+- Админка: http://localhost:8000/admin/ — `admin@cts.local` / `CtsDemo2026!`
+- Демо: `aktan@cts.local` (игрок), `org@cts.local` (организатор Cyber Arena), пароль тот же
+- Письма (коды, сброс пароля) печатаются в консоль сервера
+
+## Запуск в Docker
+
+```bash
+docker compose up --build                  # web :8000, PostgreSQL 16, Redis, celery-worker, celery-beat
+docker compose exec web python manage.py seed --demo
+```
+
+## Проверки
+
+```bash
+pytest --cov                    # тесты + покрытие
+ruff check . && ruff format --check .
+mypy apps config
+python manage.py makemigrations --check --dry-run
+```
+
+CI — `.github/workflows/backend.yml`: линт, mypy, миграции, тесты на PostgreSQL, валидация OpenAPI,
+`pip-audit`, `check --deploy`. **GitHub читает workflow только из корня репозитория** — файл нужно
+перенести в `/.github/workflows/`.
+
+## Структура
+
+```
+config/           настройки (всё из env), urls, celery, asgi/wsgi
+apps/
+  core/           базовые модели, формат ошибок, пагинация, X-Request-ID, техработы, логи, healthz/readyz, сиды
+  accounts/       User, сессии, коды, согласия; JWT в cookie; регистрация, вход, подтверждение, сброс пароля
+  games/          игры, форматы сетки, шаблоны регламентов
+  orgs/           организации, сотрудники, матрица прав (экран 42), лимиты тарифа
+  billing/        тарифы (лимиты в Plan.limits), подписки
+```
+
+В каждом приложении: `models.py`, `services.py` (бизнес-логика), `selectors.py` (запросы), `api/`, `tests/`.
+
+## API этапа 1
+
+| Метод | Путь | Что |
+| --- | --- | --- |
+| POST | `/api/v1/auth/register/` | `{role, nick, email, password, terms}` → сразу входит, шлёт код на почту |
+| GET | `/api/v1/auth/nick-available/?nick=` | `{available}` |
+| POST | `/api/v1/auth/login/` | `{login, password, remember}` — почта или ник |
+| POST | `/api/v1/auth/refresh/`, `/auth/logout/` | по refresh-cookie |
+| POST | `/api/v1/auth/verify/`, `/auth/verify/resend/` | код из письма |
+| POST | `/api/v1/auth/password/forgot/`, `/auth/password/reset/` | `{email}` / `{token, password}` |
+| GET | `/api/v1/auth/me/` (и `/api/v1/me/`) | текущий пользователь в форме `SessionUser` фронта |
+| PATCH | `/api/v1/me/onboarding/` | `{games, city}` |
+| GET | `/api/v1/games/`, `/api/v1/plans/` | справочники |
+| GET | `/healthz`, `/readyz` | живой / готов (БД, кэш, брокер) |
+
+Ошибки всегда `{"code", "message", "fields"}`; пагинация `{count, page, pages, next, previous, results}`.
+
+## Подключение фронта
+
+Всё, что нужно фронтендеру — `.env.local`, демо-аккаунты, коды подтверждения, что поправить у себя, —
+в [`docs/FRONTEND_HANDOFF.md`](docs/FRONTEND_HANDOFF.md). Проверка через прокси Next.js:
+`scripts/smoke_next_proxy.py`; контрактные тесты: `apps/core/tests/test_frontend_contract.py`.
+
+## Решения и отступления
+
+- **Python 3.12** вместо 3.10: на машине разработки стоят 3.12 и 3.14. Кода, несовместимого с 3.10, нет.
+- **Организация при регистрации организатора** создаётся сразу (название = ник, тариф Free):
+  фронт без неё не пускает в `/org`. Пока одна организация на пользователя (раздел 13.2).
+- **Коды форматов сетки** — как во фронте: `single/double/groups/swiss/league`. `league` оставлен
+  как бета, пока заказчик не решит (13.2).
+- **Цены тарифов** — `null`, пока не утверждены. Лимит рассылок Free (100) и Лиги (10 000) —
+  временные значения, меняются в админке.
+- **Повторное использование refresh** отклоняется через чёрный список, но сессию не отзывает:
+  иначе две вкладки, обновляющие токен одновременно, разлогинивали бы пользователя.
+- **Отзыв сессии действует сразу**: в JWT есть `sid`, и каждый запрос проверяет, что сессия не отозвана.
+- **CSRF без токена**: cookie `SameSite=Lax` + проверка Origin по `CSRF_TRUSTED_ORIGINS`
+  (`apps/accounts/csrf.py`). GET не проверяются — SSR Next.js ходит без Origin.
+- **Refresh-cookie на `path=/`** и **GET по refresh**, когда access истёк: иначе `proxy.ts` и SSR фронта
+  через 15 минут считали бы пользователя вышедшим. Меняющие запросы — только с access.
+  Приём refresh на GET — временный режим. Когда фронт начнёт обновлять токен
+  в proxy.ts или getSession, этот режим на бэке выключим.
+- **Пути API без завершающего слэша** принимаются без редиректа: Next.js срезает слэш до rewrite.
+
+## Не сделано на этапе 1
+
+- **OAuth (Discord, Google, Telegram)** — нужны ключи приложений; подключается через django-allauth.
+- **WebSocket (Channels)**, команды, турниры, сетка — этапы 2–4.
+- **2FA, список сессий, смена почты/пароля, удаление и экспорт аккаунта** — этап 5 (модели
+  сессий и кодов уже есть).
+- **Переводы на ky/en** — строки написаны на русском через gettext; файлы `.po` ещё не созданы.

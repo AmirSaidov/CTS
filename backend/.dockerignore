@@ -1,0 +1,9 @@
+.venv
+.env
+db.sqlite3
+media
+staticfiles
+**/__pycache__
+.mypy_cache
+.ruff_cache
+.pytest_cache
