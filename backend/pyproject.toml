@@ -1,0 +1,54 @@
+[project]
+name = "cts-backend"
+version = "0.1.0"
+requires-python = ">=3.10"
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings"
+python_files = ["test_*.py"]
+addopts = "-q --strict-markers"
+filterwarnings = ["ignore::DeprecationWarning:celery.*"]
+
+[tool.coverage.run]
+source = ["apps"]
+omit = ["*/migrations/*", "*/tests/*", "*/admin.py"]
+
+[tool.coverage.report]
+skip_covered = true
+show_missing = true
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+extend-exclude = ["*/migrations/*"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "DJ", "S", "RUF"]
+ignore = [
+    "RUF001", "RUF002", "RUF003",  # кириллица в строках и комментариях — норма
+    "RUF012",                      # изменяемые атрибуты классов в Django Meta/DRF
+    "S101",                        # assert в тестах
+]
+
+[tool.ruff.lint.per-file-ignores]
+"*/tests/*" = ["S105", "S106"]
+"apps/core/management/commands/seed.py" = ["S105", "E501"]
+"scripts/*" = ["S310", "S105"]  # смоук-скрипты ходят на адрес из аргумента
+
+[tool.ruff.lint.isort]
+known-first-party = ["apps", "config"]
+
+[tool.mypy]
+python_version = "3.12"
+plugins = ["mypy_django_plugin.main", "mypy_drf_plugin.main"]
+ignore_missing_imports = true
+check_untyped_defs = true
+exclude = ["migrations/", "tests/"]
+
+[[tool.mypy.overrides]]
+# строгий режим для сервисного слоя (раздел 11)
+module = ["apps.*.services"]
+disallow_untyped_defs = true
+
+[tool.django-stubs]
+django_settings_module = "config.settings"

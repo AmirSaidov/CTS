@@ -1,0 +1,26 @@
+# секреты и локальные данные
+.env
+db.sqlite3
+db.sqlite3-journal
+media/
+staticfiles/
+
+# виртуальные окружения
+.venv/
+venv/
+env/
+
+# Python
+__pycache__/
+*.py[cod]
+
+# кэши инструментов
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# покрытие
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/

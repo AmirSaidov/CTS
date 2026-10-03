@@ -1,0 +1,18 @@
+# Запуск из корня репозитория: pre-commit install -c backend/.pre-commit-config.yaml
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.9.10
+    hooks:
+      - id: ruff
+        args: [--fix]
+        files: ^backend/
+      - id: ruff-format
+        files: ^backend/
+  - repo: local
+    hooks:
+      - id: migrations-check
+        name: миграции без пропусков
+        entry: bash -c "cd backend && python manage.py makemigrations --check --dry-run"
+        language: system
+        pass_filenames: false
+        files: ^backend/apps/.*/models\.py$
