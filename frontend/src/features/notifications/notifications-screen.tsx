@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Bell, Calendar, Check, Clock, Info, Mail, SlidersHorizontal, Swords, TriangleAlert, Trophy, Users, type LucideIcon } from "lucide-react";
+import { Bell, Calendar, Check, Clock, Info, Mail, Swords, TriangleAlert, Trophy, Users, type LucideIcon } from "lucide-react";
 import type { Notification } from "@/shared/api/types";
 import { api } from "@/shared/api/endpoints";
 import { qk } from "@/shared/api/keys";
@@ -76,14 +76,9 @@ export function NotificationsScreen({ initial, audience = "player" }: { initial:
         title="Уведомления"
         sub={`${unread} непрочитанных`}
         actions={
-          <>
-            <Button icon={Check} disabled={!unread} onClick={() => read.mutate("all")}>
-              Прочитать все
-            </Button>
-            <Button icon={SlidersHorizontal} href="/settings/notifications">
-              Настроить
-            </Button>
-          </>
+          <Button icon={Check} disabled={!unread} onClick={() => read.mutate("all")}>
+            Прочитать все
+          </Button>
         }
       />
       <Chips active={kind} onChange={setKind} items={filters} />
@@ -96,7 +91,7 @@ export function NotificationsScreen({ initial, audience = "player" }: { initial:
           <QueryError onRetry={() => refetch()} />
         </Card>
       ) : list.length === 0 || (kind === "all" && unread === 0 && list.length === 0) ? (
-        <EmptyStateView code="EMPTY.NOTIFY" icon={Bell} title="Всё прочитано" text="Новых уведомлений нет. Мы сообщим о матчах и приглашениях." cta={{ href: "/settings/notifications", label: "Настроить", icon: SlidersHorizontal }} />
+        <EmptyStateView code="EMPTY.NOTIFY" icon={Bell} title="Всё прочитано" text="Новых уведомлений нет. Мы сообщим о матчах и приглашениях." />
       ) : (
         GROUPS.map(([g, title]) => {
           const items = list.filter((n) => groupOf(n.at) === g);

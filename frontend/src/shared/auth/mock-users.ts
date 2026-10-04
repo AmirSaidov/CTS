@@ -2,7 +2,7 @@ import type { SessionUser } from "@/shared/api/types";
 import { TEAMS_REF } from "@/shared/api/mocks/data";
 
 /** Роли для dev-переключателя (cookie `cts_mock_role`). Только для режима моков. */
-export const MOCK_ROLES = ["guest", "player", "captain", "organizer", "judge", "admin"] as const;
+export const MOCK_ROLES = ["guest", "player", "captain", "organizer"] as const;
 export type MockRole = (typeof MOCK_ROLES)[number];
 
 export const MOCK_ROLE_LABELS: Record<MockRole, string> = {
@@ -10,8 +10,6 @@ export const MOCK_ROLE_LABELS: Record<MockRole, string> = {
   player: "Игрок",
   captain: "Капитан",
   organizer: "Организатор",
-  judge: "Судья (сотрудник орг.)",
-  admin: "Админ платформы",
 };
 
 const base: SessionUser = {
@@ -52,9 +50,5 @@ export function mockUser(role: MockRole): SessionUser | null {
       return { ...base, captainOf: "tengri" };
     case "organizer":
       return { ...base, captainOf: "tengri", isOrganizer: true, org, defaultCabinet: "org" };
-    case "judge":
-      return { ...base, isOrganizer: true, org: { ...org, role: "judge" }, defaultCabinet: "org" };
-    case "admin":
-      return { ...base, captainOf: "tengri", isOrganizer: true, isPlatformAdmin: true, org: { ...org, plan: "pro" } };
   }
 }

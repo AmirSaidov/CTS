@@ -35,17 +35,13 @@ export default async function PlayerOverview() {
         <StatTile label="Активные турниры" value="02" sub="1 в плей-офф" />
         <StatTile label="Матчей до финала" value="01" sub="27.09 · 19:00" tone="gold" />
         <StatTile label="Винрейт сезона" value="67%" sub="31 победа из 46" />
-        <StatTile label="Приглашения" value={String(user?.unread.invites ?? 0).padStart(2, "0")} sub="Ответьте до 30.09" tone="accent" href="/me/invites" />
+        <StatTile label="Приглашения" value={String(user?.unread.invites ?? 0).padStart(2, "0")} sub="Ответьте до 30.09" tone="accent" />
       </div>
       <div className="grid gap-6 desk:grid-cols-[1fr_370px]">
         <div className="flex min-w-0 flex-col gap-6">
           {user?.team ? <NextMatchCard /> : <EmptyState kind="team" compact />}
           <Card>
-            <CardHeader title="Мои турниры">
-              <Link href="/me/tournaments" className="btn-text text-[14px] hover:text-accent-hover">
-                Все
-              </Link>
-            </CardHeader>
+            <CardHeader title="Мои турниры" />
             {active.length === 0 ? (
               <EmptyState kind="matches" compact className="m-6" />
             ) : (
@@ -78,11 +74,7 @@ export default async function PlayerOverview() {
         </div>
         <aside className="flex flex-col gap-6">
           <Card>
-            <CardHeader title="Приглашения">
-              <Link href="/me/invites" className="btn-text text-[14px] hover:text-accent-hover">
-                Все
-              </Link>
-            </CardHeader>
+            <CardHeader title="Приглашения" />
             <InviteMiniList initial={invites} />
           </Card>
           <Card>

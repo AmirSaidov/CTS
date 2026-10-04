@@ -20,7 +20,7 @@ export default function RegisterPage() {
       }
       sub="Бесплатно для игроков. Freemium для организаторов."
     >
-      <StepBar current={1} total={4} />
+      <StepBar current={1} total={2} />
       <AuthTitle eyebrow="Регистрация" title="Создать аккаунт" sub="Выберите роль — её можно сменить позже." />
       <Suspense>
         <RegisterForm />

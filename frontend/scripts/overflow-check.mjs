@@ -3,11 +3,11 @@
 import { chromium } from "@playwright/test";
 
 const base = process.env.SHOOT_BASE ?? "http://localhost:3100";
+// маршруты MVP («ТЗ на урезание до MVP», раздел 4)
 const ROUTES = {
-  guest: ["/", "/tournaments", "/tournaments/bishkek-cyber-cup", "/tournaments/bishkek-cyber-cup/matches/SF-02", "/schedule", "/p/aktan", "/t/tengri", "/rankings", "/news", "/news/bishkek-cyber-cup-playoff", "/pricing", "/about", "/legal/privacy", "/login", "/register", "/forgot", "/reset/abc", "/maintenance", "/nope"],
-  captain: ["/verify", "/onboarding/games", "/onboarding/accounts", "/me", "/me/profile", "/me/team", "/me/tournaments", "/tournaments/osh-open/apply", "/me/matches", "/me/invites", "/me/notifications"],
-  organizer: ["/org", "/org/tournaments", "/org/tournaments/new", "/org/tournaments/t3/setup/3", "/org/tournaments/t3/setup/4", "/org/tournaments/t3/setup/5", "/org/tournaments/t3/applications", "/org/tournaments/t3/bracket", "/org/tournaments/t3/matches", "/org/tournaments/t3/schedule", "/org/tournaments/t3/checkin", "/org/participants", "/org/mailings", "/org/analytics", "/org/staff", "/org/branding", "/org/notifications"],
-  admin: ["/settings/profile", "/settings/notifications", "/settings/locale", "/settings/billing", "/settings/delete", "/control/users", "/control/moderation", "/control/payments", "/control/games", "/control/content", "/dev/ui"],
+  guest: ["/", "/tournaments", "/tournaments/bishkek-cyber-cup", "/tournaments/bishkek-cyber-cup/matches/SF-02", "/pricing", "/legal/privacy", "/login", "/register", "/forgot", "/reset/abc", "/nope"],
+  captain: ["/verify", "/me", "/me/profile", "/me/team", "/tournaments/osh-open/apply", "/me/matches", "/me/notifications", "/settings/profile"],
+  organizer: ["/org", "/org/tournaments", "/org/tournaments/new", "/org/tournaments/t3/setup/2", "/org/tournaments/t3/applications", "/org/tournaments/t3/bracket", "/org/tournaments/t3/matches", "/org/tournaments/t3/checkin", "/org/notifications", "/dev/ui"],
 };
 const widths = (process.env.WIDTHS ?? "375,768,1440").split(",").map(Number);
 

@@ -4,7 +4,7 @@ import { useId, useState } from "react";
 import { DndContext, KeyboardSensor, PointerSensor, closestCenter, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core";
 import { SortableContext, arrayMove, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Check, ChartColumn, GripVertical, Info, RefreshCw, Shuffle } from "lucide-react";
+import { Check, GripVertical, Info, RefreshCw, Shuffle } from "lucide-react";
 import type { Bracket, TeamRef } from "@/shared/api/types";
 import { api } from "@/shared/api/endpoints";
 import { cn } from "@/shared/lib/cn";
@@ -36,9 +36,9 @@ function SeedRow({ team, index }: { team: TeamRef; index: number }) {
   );
 }
 
-export function SeedingScreen({ id, initialSeeds, initialBracket, rankOrder }: { id: string; initialSeeds: TeamRef[]; initialBracket: Bracket; rankOrder: string[] }) {
+export function SeedingScreen({ id, initialSeeds, initialBracket }: { id: string; initialSeeds: TeamRef[]; initialBracket: Bracket }) {
   const [seeds, setSeeds] = useState(initialSeeds);
-  const [format, setFormat] = useState<"single" | "double" | "groups">("single");
+  const [format, setFormat] = useState<"single" | "double">(initialBracket.format === "double" ? "double" : "single");
   const [bracket, setBracket] = useState(initialBracket);
   const [stale, setStale] = useState(false);
   const [ask, setAsk] = useState(false);
@@ -74,8 +74,6 @@ export function SeedingScreen({ id, initialSeeds, initialBracket, rankOrder }: {
     }
   };
 
-  const pos = (slug: string) => (rankOrder.indexOf(slug) + 1 || 999);
-  const byRating = () => reorder([...seeds].sort((a, b) => pos(a.slug) - pos(b.slug)));
   const shuffle = () => reorder([...seeds].map((s) => [Math.random(), s] as const).sort((a, b) => a[0] - b[0]).map(([, s]) => s));
 
   return (
@@ -95,16 +93,13 @@ export function SeedingScreen({ id, initialSeeds, initialBracket, rankOrder }: {
               </ol>
             </SortableContext>
           </DndContext>
-          <Button block icon={ChartColumn} onClick={byRating}>
-            По рейтингу CTS
-          </Button>
           <Button block icon={Shuffle} onClick={shuffle}>
             Случайно
           </Button>
         </div>
       </Card>
       <Card className="min-w-0">
-        <CardHeader title={`${format === "single" ? "Single Elimination" : format === "double" ? "Double Elimination" : "Группы + плей-офф"} · ${seeds.length} команд`}>
+        <CardHeader title={`${format === "single" ? "Single Elimination" : "Double Elimination"} · ${seeds.length} команд`}>
           <Segmented
             label="Формат"
             active={format}
@@ -115,7 +110,6 @@ export function SeedingScreen({ id, initialSeeds, initialBracket, rankOrder }: {
             items={[
               { key: "single", label: "Single" },
               { key: "double", label: "Double" },
-              { key: "groups", label: "Группы" },
             ]}
           />
           <Button size="sm" variant="ghost" icon={RefreshCw} loading={busy === "regen"} onClick={() => setAsk(true)}>

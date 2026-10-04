@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { Copy, Crown, Eye, LogOut, Search, Send, SlidersHorizontal, X } from "lucide-react";
+import { Copy, Crown, LogOut, Search, Send, SlidersHorizontal, X } from "lucide-react";
 import type { Team } from "@/shared/api/types";
 import { api } from "@/shared/api/endpoints";
 import { applyServerErrors } from "@/shared/lib/forms";
@@ -71,13 +71,10 @@ export function TeamScreen({ team }: { team: Team }) {
           </div>
           <h1 className="font-display text-[clamp(44px,5vw,64px)] leading-none">{team.name}</h1>
           <span className="mono text-[11px] tracking-[0.16em] text-text-3 uppercase">
-            {members.length} игроков · капитан {members.find((m) => m.captain)?.nick} · cts.gg/t/{team.slug}
+            {members.length} игроков · капитан {members.find((m) => m.captain)?.nick}
           </span>
         </div>
         <div className="flex flex-wrap gap-3">
-          <Button icon={Eye} href={`/t/${team.slug}`}>
-            Публичная страница
-          </Button>
           {captain && <Button icon={SlidersHorizontal}>Настройки команды</Button>}
         </div>
       </section>

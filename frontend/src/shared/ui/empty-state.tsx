@@ -1,4 +1,4 @@
-import { Bell, Mail, Search, SlidersHorizontal, Swords, Trophy, Users, Plus, X, type LucideIcon } from "lucide-react";
+import { Bell, Mail, Search, Swords, Trophy, Users, Plus, X, type LucideIcon } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { CornerMarkers } from "./card";
 import { Button } from "./button";
@@ -10,8 +10,8 @@ export type EmptyKind = "tournaments" | "matches" | "team" | "notify" | "search"
 const META: Record<EmptyKind, { code: string; icon: LucideIcon; cta?: { href: string; icon?: LucideIcon; primary?: boolean }; cta2?: { href: string } }> = {
   tournaments: { code: "EMPTY.TOURNAMENTS", icon: Trophy, cta: { href: "/org/tournaments/new", icon: Plus, primary: true } },
   matches: { code: "EMPTY.MATCHES", icon: Swords, cta: { href: "/tournaments", icon: Search } },
-  team: { code: "EMPTY.TEAM", icon: Users, cta: { href: "/me/team?create=1", icon: Plus, primary: true }, cta2: { href: "/rankings" } },
-  notify: { code: "EMPTY.NOTIFY", icon: Bell, cta: { href: "/settings/notifications", icon: SlidersHorizontal } },
+  team: { code: "EMPTY.TEAM", icon: Users, cta: { href: "/me/team?create=1", icon: Plus, primary: true }, cta2: { href: "/tournaments" } },
+  notify: { code: "EMPTY.NOTIFY", icon: Bell },
   search: { code: "EMPTY.SEARCH", icon: Search, cta: { href: "?", icon: X } },
   invites: { code: "EMPTY.INVITES", icon: Mail },
 };

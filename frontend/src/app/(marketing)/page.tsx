@@ -1,6 +1,5 @@
 import { ArrowRight, Bell, CalendarDays, ChartColumn, Check, Network, Trophy, Users } from "lucide-react";
 import { api } from "@/shared/api/endpoints";
-import { getSession } from "@/shared/auth/session";
 import { Button } from "@/shared/ui/button";
 import { CornerMarkers } from "@/shared/ui/card";
 import { CutFrame } from "@/shared/ui/cut-frame";
@@ -23,7 +22,7 @@ const FEATURES = [
 const STEPS = ["Регистрация", "Авто-сетка", "Расписание", "Результаты"];
 
 export default async function LandingPage() {
-  const [bracket, plans, user] = await Promise.all([api.bracket("bishkek-cyber-cup", { revalidate: 30 }), api.plans(), getSession()]);
+  const [bracket, plans] = await Promise.all([api.bracket("bishkek-cyber-cup", { revalidate: 30 }), api.plans()]);
 
   return (
     <>
@@ -158,7 +157,7 @@ export default async function LandingPage() {
           </Reveal>
           <div className="grid items-stretch gap-6 desk:grid-cols-3">
             {plans.map((p) => (
-              <PlanCard key={p.key} plan={p} compact authed={!!user} />
+              <PlanCard key={p.key} plan={p} compact />
             ))}
           </div>
         </div>

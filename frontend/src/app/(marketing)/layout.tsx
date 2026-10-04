@@ -5,7 +5,6 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
   return (
     <div className="flex min-h-dvh flex-col">
       <PublicHeader
-        variant="landing"
         items={[
           { href: "/#features", label: "Возможности" },
           { href: "/#audience", label: "Для кого" },

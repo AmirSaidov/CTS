@@ -34,7 +34,8 @@ test("подача заявки капитаном", async ({ page, context, bas
   }
   await expect(send).toBeEnabled();
   await send.click();
-  await expect(page).toHaveURL(/\/me\/tournaments\?tab=applications/);
+  await expect(page).toHaveURL(/\/me$/);
+  await expect(page.getByText("Заявка отправлена")).toBeVisible();
 });
 
 test("чек-ин и ввод счёта со скриншотом @mobile", async ({ page, context, baseURL }) => {
@@ -62,20 +63,20 @@ test("создание турнира: валидация шага и перех
   await expect(page.getByLabel("Превью карточки турнира")).toContainText("Bishkek Night Cup");
   await page.getByRole("button", { name: "Далее" }).click();
   await expect(page).toHaveURL(/\/org\/tournaments\/\w+\/setup\/2/);
-  await expect(page.getByText("Шаг 2 из 5 · Даты и регистрация")).toBeVisible();
+  await expect(page.getByText("Шаг 2 из 2 · Даты и регистрация")).toBeVisible();
 });
 
-test("публикация турнира через подтверждение", async ({ page, context, baseURL }) => {
+test("публикация турнира со второго шага через подтверждение", async ({ page, context, baseURL }) => {
   await as(context, "organizer", baseURL);
-  await page.goto("/org/tournaments/t3/setup/5");
+  await page.goto("/org/tournaments/t3/setup/2");
   await page.getByRole("button", { name: "Опубликовать турнир" }).click();
   await expect(page.getByRole("dialog")).toContainText("нельзя поменять игру и формат сетки");
   await page.getByRole("dialog").getByRole("button", { name: "Опубликовать" }).click();
   await expect(page).toHaveURL(/\/org\/tournaments\/t3\/applications/);
 });
 
-test("судья решает спор", async ({ page, context, baseURL }) => {
-  await as(context, "judge", baseURL);
+test("владелец организации решает спор", async ({ page, context, baseURL }) => {
+  await as(context, "organizer", baseURL);
   await page.goto("/org/tournaments/t3/matches");
   const panel = page.getByRole("region", { name: /Спор · QF-03/ }).or(page.locator("section", { has: page.getByRole("heading", { name: "Спор · QF-03" }) }));
   await expect(panel.first()).toBeVisible();
@@ -84,13 +85,16 @@ test("судья решает спор", async ({ page, context, baseURL }) => {
   await expect(page.getByText("Решение вынесено")).toBeVisible();
 });
 
-test("роли: судья не видит рассылки, /control скрыт от организатора", async ({ page, context, baseURL }) => {
-  await as(context, "judge", baseURL);
-  await page.goto("/org");
-  await expect(page.getByRole("link", { name: "Рассылки" })).toHaveCount(0);
+test("MVP: в меню нет убранных экранов, их адреса отдают 404", async ({ page, context, baseURL }) => {
   await as(context, "organizer", baseURL);
-  const res = await page.goto("/control/users");
-  expect(res?.status()).toBe(404);
+  await page.goto("/org");
+  for (const name of ["База участников", "Рассылки", "Аналитика", "Команда организаторов", "Брендирование", "Подписка"]) {
+    await expect(page.getByRole("link", { name })).toHaveCount(0);
+  }
+  for (const path of ["/rankings", "/schedule", "/about", "/me/invites", "/org/participants", "/settings/billing", "/control/users"]) {
+    const res = await page.goto(path);
+    expect(res?.status(), path).toBe(404);
+  }
 });
 
 test("live: счёт матча обновляется без перезагрузки", async ({ page, context, baseURL }) => {

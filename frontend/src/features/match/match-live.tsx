@@ -13,21 +13,19 @@ import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { Card, CardHeader, CornerMarkers, KeyRow } from "@/shared/ui/card";
 import { Avatar, Placeholder, TeamLogo } from "@/shared/ui/misc";
-import { Table, Td, Th, THead, Tr } from "@/shared/ui/table";
 import { Tabs } from "@/shared/ui/tabs";
-import { Tip } from "@/shared/ui/feedback";
 
-type Stats = { a: PlayerStatLine[]; b: PlayerStatLine[] };
+/** Составы команд. Статистики игроков (K/D/A, ACS) в MVP нет — источника данных нет. */
+type Rosters = { a: PlayerStatLine[]; b: PlayerStatLine[] };
 
 const TABS = [
   { key: "overview", label: "Обзор" },
   { key: "maps", label: "Карты" },
   { key: "rosters", label: "Составы" },
-  { key: "stats", label: "Статистика" },
   { key: "stream", label: "Трансляция" },
 ];
 
-export function MatchLive({ slug, initial, stats, initialTab = "overview" }: { slug: string; initial: Match; stats: Stats; initialTab?: string }) {
+export function MatchLive({ slug, initial, rosters, initialTab = "overview" }: { slug: string; initial: Match; rosters: Rosters; initialTab?: string }) {
   const { data: m } = useLiveMatch(slug, initial.code, initial);
   const [tab, setTab] = useState(initialTab);
   const live = m.status === "live";
@@ -48,17 +46,11 @@ export function MatchLive({ slug, initial, stats, initialTab = "overview" }: { s
       <div className="grid gap-6 desk:grid-cols-[1fr_420px]">
         <div className="flex min-w-0 flex-col gap-6">
           {(tab === "overview" || tab === "maps") && <MapCards m={m} />}
-          {(tab === "overview" || tab === "stats") && (
-            <>
-              <StatTable team={m.a.team?.name ?? "TBD"} tag={m.a.team?.tag ?? "?"} rows={stats.a} />
-              <StatTable team={m.b.team?.name ?? "TBD"} tag={m.b.team?.tag ?? "?"} rows={stats.b} />
-            </>
-          )}
-          {tab === "rosters" && (
+          {(tab === "overview" || tab === "rosters") && (
             <div className="grid gap-6 tab:grid-cols-2">
               {[
-                [m.a.team, stats.a],
-                [m.b.team, stats.b],
+                [m.a.team, rosters.a],
+                [m.b.team, rosters.b],
               ].map(([team, rows], i) => (
                 <Card key={i}>
                   <CardHeader title={(team as Match["a"]["team"])?.name ?? "TBD"} />
@@ -168,46 +160,6 @@ function MapCards({ m }: { m: Match }) {
         );
       })}
     </div>
-  );
-}
-
-function StatTable({ team, tag, rows }: { team: string; tag: string; rows: PlayerStatLine[] }) {
-  return (
-    <Card>
-      <CardHeader title={team}>
-        <TeamLogo tag={tag} size={28} />
-      </CardHeader>
-      <Table minWidth={560} label={`Статистика ${team}`}>
-        <THead>
-          <Th sticky>Игрок</Th>
-          <Th>Роль</Th>
-          <Th align="right">K</Th>
-          <Th align="right">D</Th>
-          <Th align="right">A</Th>
-          <Th align="right">
-            <Tip text="Average Combat Score — средний боевой рейтинг">ACS</Tip>
-          </Th>
-        </THead>
-        <tbody>
-          {rows.map((p) => (
-            <Tr key={p.nick}>
-              <Td sticky>
-                <span className="flex items-center gap-3">
-                  <Avatar tag={p.tag} size={32} />
-                  <span className="font-semibold">{p.nick}</span>
-                  {p.captain && <Badge tone="gold">Кап</Badge>}
-                </span>
-              </Td>
-              <Td className="text-text-2">{p.role}</Td>
-              <Td align="right" className="mono">{p.k}</Td>
-              <Td align="right" className="mono">{p.d}</Td>
-              <Td align="right" className="mono">{p.a}</Td>
-              <Td align="right" className="mono font-semibold">{p.acs}</Td>
-            </Tr>
-          ))}
-        </tbody>
-      </Table>
-    </Card>
   );
 }
 

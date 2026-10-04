@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useForm, useWatch, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { AtSign, Check, Eye, MapPin, Send, Tv, Upload } from "lucide-react";
+import { AtSign, Check, MapPin, Send, Tv, Upload } from "lucide-react";
 import type { Player } from "@/shared/api/types";
 import { api } from "@/shared/api/endpoints";
 import { applyServerErrors } from "@/shared/lib/forms";
@@ -84,14 +84,9 @@ export function ProfileForm({ player }: { player: Player }) {
         title="Мой профиль"
         sub="Так вас видят организаторы и другие игроки"
         actions={
-          <>
-            <Button icon={Eye} href={`/p/${player.nick.toLowerCase()}`}>
-              Открыть публичный профиль
-            </Button>
-            <Button type="submit" variant="primary" icon={Check} loading={isSubmitting}>
-              Сохранить
-            </Button>
-          </>
+          <Button type="submit" variant="primary" icon={Check} loading={isSubmitting}>
+            Сохранить
+          </Button>
         }
       />
       <div className="grid gap-6 desk:grid-cols-[1fr_370px]">

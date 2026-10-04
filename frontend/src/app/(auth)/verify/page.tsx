@@ -38,8 +38,7 @@ function Verify() {
     setError(null);
     try {
       await api.verify(value);
-      // TODO(заказчик): нужен ли организатору онбординг игр — пока ведём сразу в /org
-      router.push(isOrg ? "/org" : "/onboarding/games");
+      router.push(isOrg ? "/org" : "/me");
     } catch (e) {
       setError(e instanceof ApiRequestError ? (e.fields.code?.[0] ?? e.message) : "Нет связи с сервером");
       setLoading(false);
@@ -48,7 +47,7 @@ function Verify() {
 
   return (
     <>
-      <StepBar current={2} total={4} />
+      <StepBar current={2} total={2} />
       <AuthTitle
         eyebrow="Подтверждение"
         title="Проверьте почту"

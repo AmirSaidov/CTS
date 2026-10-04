@@ -3,10 +3,12 @@ import type { PlanInfo } from "@/shared/api/types";
 import { cn } from "@/shared/lib/cn";
 import { Button } from "@/shared/ui/button";
 import { CutFrame } from "@/shared/ui/cut-frame";
+import { CONTACT_TELEGRAM } from "@/shared/lib/contacts";
 
 /** Карточка тарифа. Цены и лимиты — с API тарифов, не хардкод. */
-export function PlanCard({ plan, period = "month", authed, compact }: { plan: PlanInfo; period?: "month" | "year"; authed?: boolean; compact?: boolean }) {
-  const href = plan.key === "free" ? "/register?role=org" : plan.key === "pro" ? (authed ? "/settings/billing?plan=pro" : "/register?role=org&plan=pro") : "/about#contact";
+export function PlanCard({ plan, period = "month", compact }: { plan: PlanInfo; period?: "month" | "year"; compact?: boolean }) {
+  // платных тарифов в MVP нет: Pro и Лига — заявка в Telegram команде CTS
+  const href = plan.key === "free" ? "/register?role=org" : CONTACT_TELEGRAM;
   const price = period === "year" ? plan.priceYear : plan.priceMonth;
   const featured = plan.recommended;
 

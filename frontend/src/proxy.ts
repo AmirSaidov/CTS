@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { isDeferredRoute } from "@/shared/lib/features";
 
 /*
  * Защита маршрутов по роли (Next 16: бывший middleware).
@@ -27,8 +28,8 @@ function readRole(req: NextRequest): Role {
     return {
       authed: r !== "guest",
       player: r !== "guest",
-      organizer: ["organizer", "judge", "admin"].includes(r),
-      admin: r === "admin",
+      organizer: r === "organizer",
+      admin: false,
       verified: true,
     };
   }
@@ -50,6 +51,9 @@ export function proxy(req: NextRequest) {
   const { pathname, search } = req.nextUrl;
   const role = readRole(req);
 
+  // экраны, отложенные на v2, — 404, пока не включён флаг FEATURE_<NAME>
+  if (isDeferredRoute(pathname)) return NextResponse.rewrite(new URL("/__not-found", req.url));
+
   const toLogin = () => {
     const url = new URL("/login", req.url);
     url.searchParams.set("next", pathname + search);
@@ -64,7 +68,6 @@ export function proxy(req: NextRequest) {
   const needsAuth =
     pathname.startsWith("/me") ||
     pathname.startsWith("/settings") ||
-    pathname.startsWith("/onboarding") ||
     pathname === "/verify" ||
     /^\/tournaments\/[^/]+\/apply/.test(pathname) ||
     pathname.startsWith("/org") ||
