@@ -38,7 +38,9 @@ def test_plans_list(api, seeded):
     assert free["price_month"] == "0"
     assert pro["price_month"] == "—"  # цена не утверждена, но поле — строка, как во фронте
     assert pro["recommended"] is True
-    assert free["limits"]["active_tournaments"] == 3
+    # ТЗ, 14.1: лимиты — только активные турниры и форматы сетки
+    assert free["limits"] == {"active_tournaments": 3, "formats": ["single", "double", "groups"]}
+    assert all(set(p["limits"]) == {"active_tournaments", "formats"} for p in data)
 
 
 def test_seed_is_idempotent(seeded):

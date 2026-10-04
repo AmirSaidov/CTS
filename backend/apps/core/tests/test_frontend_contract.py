@@ -4,7 +4,8 @@
 - пути, методы и тела — из frontend/src/shared/api/endpoints.ts (auth, me, games, plans);
 - преобразование ключей и заголовки — как в frontend/src/shared/api/client.ts
   (тело camelCase → snake_case, ответ snake_case → camelCase, credentials: include);
-- ожидаемые поля ответов — из frontend/src/shared/api/types.ts.
+- ожидаемые поля ответов — из frontend/src/shared/api/types.ts, за вычетом убранного по ТЗ, 14.1
+  (онбординг, SessionUser.timezone, org.limits.staff и org.limits.mailings — см. docs/FRONTEND_HANDOFF.md).
 
 Если фронт поменяет контракт, эти тесты нужно обновить вместе с ним.
 """
@@ -78,7 +79,7 @@ GAME_KEYS = "slug name short publisher teamSize roster accountCheck formats stat
 PLAN_KEYS = "key tier name tagline priceMonth priceYear yearDiscount features cta"
 SESSION_USER_KEYS = (
     "id nick tag email phone fullName emailVerified isPlayer isOrganizer isPlatformAdmin "
-    "captainOf team org defaultCabinet locale timezone unread"
+    "captainOf team org defaultCabinet locale unread"
 )
 
 
@@ -129,7 +130,7 @@ def test_register_exactly_as_frontend_sends_requires_terms(seeded):
     assert "terms" in data["fields"]
 
 
-def test_register_verify_onboarding_flow(seeded, django_capture_on_commit_callbacks):
+def test_register_verify_flow(seeded, django_capture_on_commit_callbacks):
     front = FrontClient()
     body = {"role": "player", "nick": "NewPlayer", "email": "new@mail.kg", "password": "Str0ng!pass", "terms": True}
 
@@ -147,10 +148,6 @@ def test_register_verify_onboarding_flow(seeded, django_capture_on_commit_callba
 
     status, data, _ = front.request("/auth/verify/", "POST", {"code": last_code()})
     assert (status, data) == (200, {"ok": True})
-
-    # onboarding/games/page.tsx и onboarding/accounts/page.tsx — по отдельности
-    assert front.request("/me/onboarding/", "PATCH", {"games": ["valorant", "cs2"]})[:2] == (200, {"ok": True})
-    assert front.request("/me/onboarding/", "PATCH", {"city": "Бишкек"})[:2] == (200, {"ok": True})
 
     status, me, _ = front.request("/auth/me/")
     assert status == 200 and me["emailVerified"] is True and me["defaultCabinet"] == "player"
@@ -234,19 +231,12 @@ def test_me_for_organizer_matches_session_user(seeded):
     assert_has(org, "slug name role plan limits")
     assert org["role"] in {"owner", "admin", "judge", "moderator"}
     assert org["plan"] in {"free", "pro", "league"}
-    for key in ("tournaments", "staff", "mailings"):
-        used, cap = org["limits"][key]
-        assert isinstance(used, int) and (cap is None or isinstance(cap, int))
-    # имена прав — как в frontend/src/shared/lib/permissions.ts
-    assert set(org["permissions"]) <= {
-        "tournaments.manage",
-        "applications.decide",
-        "results.edit",
-        "disputes.resolve",
-        "mailings.send",
-        "billing.manage",
-        "staff.manage",
-    }
+    # ТЗ, 14.1: остался один лимит — активные турниры («Турниров: 3 из 3» в сайдбаре)
+    assert set(org["limits"]) == {"tournaments"}
+    used, cap = org["limits"]["tournaments"]
+    assert isinstance(used, int) and (cap is None or isinstance(cap, int))
+    # имена прав — как в frontend/src/shared/lib/permissions.ts; права убранных экранов 40, 42, 43, 47 не отдаются
+    assert set(org["permissions"]) <= {"tournaments.manage", "applications.decide", "results.edit", "disputes.resolve"}
 
 
 def test_login_wrong_password_and_rate_limit(user):
@@ -308,7 +298,7 @@ def test_every_response_has_request_id(db):
 
 
 def test_401_on_private_endpoint_without_cookie(db):
-    status, data, _ = FrontClient().request("/me/onboarding/", "PATCH", {"city": "Ош"})
+    status, data, _ = FrontClient().request("/auth/verify/resend/", "POST")
     assert status == 401  # client.ts делает refresh только на 401
     assert_api_error(data)
 
@@ -324,6 +314,6 @@ def test_paths_without_trailing_slash_work_without_redirect(seeded, user):
 
     body = {"login": user.email, "password": DEFAULT_PASSWORD, "remember": True}
     assert front.request("/auth/login", "POST", body)[:2] == (200, {"ok": True})
-    assert front.request("/me/onboarding", "PATCH", {"city": "Ош"})[:2] == (200, {"ok": True})
+    assert front.request("/auth/verify/resend", "POST")[:2] == (200, {"ok": True})
     status, me, _ = front.request("/auth/me")
     assert status == 200 and me["nick"] == user.nickname

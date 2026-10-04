@@ -175,9 +175,15 @@ def test_me_shape_for_organizer(api, seeded, login):
     assert data["default_cabinet"] == "org"
     assert data["org"]["role"] == "owner"
     assert data["org"]["plan"] == "free"
-    assert "billing.manage" in data["org"]["permissions"]
-    assert data["org"]["limits"]["tournaments"] == [0, 3]
-    assert data["org"]["limits"]["staff"] == [1, 1]
+    assert data["org"]["permissions"] == [
+        "tournaments.manage",
+        "applications.decide",
+        "results.edit",
+        "disputes.resolve",
+    ]
+    # ТЗ, 14.1: из лимитов остались только активные турниры
+    assert data["org"]["limits"] == {"tournaments": [0, 3]}
+    assert "timezone" not in data and "games" not in data
 
 
 # ───── подтверждение почты ─────
@@ -310,22 +316,9 @@ def test_reset_garbage_token(api):
     assert resp.status_code == 410
 
 
-# ───── онбординг ─────
+# ───── онбординг убран (ТЗ, 14.1) ─────
 
 
-def test_onboarding_games_and_city(api, seeded, user, login):
+def test_onboarding_endpoint_removed(api, user, login):
     login(user)
-
-    resp = api.patch("/api/v1/me/onboarding/", {"games": ["valorant", "cs2"], "city": "Бишкек"}, format="json")
-    assert resp.status_code == 200
-    assert sorted(api.get(ME).data["games"]) == ["cs2", "valorant"]
-
-    api.patch("/api/v1/me/onboarding/", {"games": ["dota2"]}, format="json")
-    data = api.get(ME).data
-    assert data["games"] == ["dota2"] and data["city"] == "Бишкек"
-
-
-def test_onboarding_unknown_game(api, seeded, user, login):
-    login(user)
-    resp = api.patch("/api/v1/me/onboarding/", {"games": ["tetris"]}, format="json")
-    assert resp.status_code == 400 and "games" in resp.data["fields"]
+    assert api.patch("/api/v1/me/onboarding/", {"city": "Ош"}, format="json").status_code == 404

@@ -54,8 +54,6 @@ class User(AbstractBaseUser, PermissionsMixin, SoftDeleteModel):
         "кабинет по умолчанию", max_length=8, choices=DefaultRole.choices, default=DefaultRole.PLAYER
     )
     language = models.CharField("язык", max_length=2, choices=Language.choices, default=Language.RU)
-    timezone = models.CharField("часовой пояс", max_length=64, default="Asia/Bishkek")
-    date_format = models.CharField("формат даты", max_length=16, default="DD.MM.YYYY")
     looking_for_team = models.BooleanField("ищет команду", default=False)
     email_verified = models.BooleanField("почта подтверждена", default=False)
     phone_verified = models.BooleanField("телефон подтверждён", default=False)
@@ -90,21 +88,6 @@ class User(AbstractBaseUser, PermissionsMixin, SoftDeleteModel):
     @property
     def is_player(self) -> bool:
         return self.default_role in (self.DefaultRole.PLAYER, self.DefaultRole.BOTH)
-
-
-class UserGame(models.Model):
-    """Игры, выбранные в онбординге (экран 19)."""
-
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="user_games")
-    game = models.ForeignKey("games.Game", on_delete=models.CASCADE, related_name="+")
-
-    class Meta:
-        verbose_name = "игра пользователя"
-        verbose_name_plural = "игры пользователей"
-        constraints = [models.UniqueConstraint(fields=["user", "game"], name="user_game_unique")]
-
-    def __str__(self) -> str:
-        return f"{self.user_id} · {self.game_id}"
 
 
 class PrivacySettings(models.Model):

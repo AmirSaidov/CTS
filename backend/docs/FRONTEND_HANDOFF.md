@@ -2,7 +2,8 @@
 
 Для фронтендера CTS. Как подключить Next.js к Django и что поправить у себя.
 Проверено на фронте из этого репозитория: запросы через rewrite `/api/v1` → `localhost:8000`,
-SSR с cookie, `proxy.ts`.
+SSR с cookie, `proxy.ts`. Объём уже сокращён по разделу 14 ТЗ (новый макет, 27 экранов) —
+что убрано, см. «Убрано по разделу 14 ТЗ».
 
 ## Что уже работает
 
@@ -10,7 +11,7 @@ SSR с cookie, `proxy.ts`.
 | --- | --- | --- |
 | `games` | `GET /games/` | `Game[]` |
 | `plans` | `GET /plans/` | `PlanInfo[]`; неутверждённые цены — строка `"—"` |
-| `me` | `GET /auth/me/` | `SessionUser` (+ `org.permissions`, `games`, `city`, `avatar`) |
+| `me` | `GET /auth/me/` | `SessionUser` (+ `org.permissions`, `city`, `avatar`); без `timezone`, в `org.limits` — только `tournaments` |
 | `register` | `POST /auth/register/` | `201 {ok}` + cookie; **нужно поле `terms`**, см. ниже |
 | `checkNick` | `GET /auth/nick-available/?nick=` | `{available}` |
 | `login` | `POST /auth/login/` | `{ok}` + cookie; 400 `invalid_credentials`, 429 после 5 ошибок |
@@ -19,13 +20,38 @@ SSR с cookie, `proxy.ts`.
 | `forgot` | `POST /auth/password/forgot/` | всегда `{ok}` |
 | `reset` | `POST /auth/password/reset/` | `{ok}`; устаревшая ссылка — 410 |
 | `logout` | `POST /auth/logout/` | `{ok}`, cookie удаляются |
-| `saveOnboarding` | `PATCH /me/onboarding/` | `{ok}`; `games` и `city` можно слать по отдельности |
 | `refreshSession` (client.ts) | `POST /auth/refresh/` | `{ok}` + новые cookie; иначе 401 |
 
 Ошибки — `{code, message, fields?}`, у каждого ответа есть заголовок `X-Request-ID`.
-Всё остальное из `endpoints.ts` (турниры, команды, кабинеты, CRM, админка) — этапы 2–5, сейчас **404**.
+Всё остальное из `endpoints.ts` (турниры, команды, кабинеты, CRM) — этапы 2–5, сейчас **404**.
+Часть вызовов не появится никогда — они ушли из макета, см. ниже.
 
-## `.env.local` фронта
+## Убрано по разделу 14 ТЗ
+
+Новый макет — 27 экранов из 57. Из того, что бэкенд уже сделал на этапе 1, убрано:
+
+| Что | Было | Теперь |
+| --- | --- | --- |
+| Онбординг (экраны 19, 20) | `PATCH /me/onboarding/` с `games` и `city` | **404**. Регистрация — 2 шага: аккаунт → подтверждение. Город будет в редактировании профиля (экран 22) |
+| Игры пользователя | `games` в `/auth/me/` | поля нет |
+| Часовой пояс и формат дат (экран 46) | `timezone` в `/auth/me/` | поля нет; часовой пояс есть только у турнира |
+| Лимиты тарифа | `org.limits.tournaments`, `staff`, `mailings` | только `org.limits.tournaments` («Турниров: 3 из 3» в сайдбаре) |
+| Права сотрудников | 7 прав | 4: `tournaments.manage`, `applications.decide`, `results.edit`, `disputes.resolve`. Убраны `mailings.send`, `billing.manage`, `staff.manage` — их экраны 40, 42, 43, 47 удалены |
+| Тарифы `/plans/` | `limits` со staff, mailings, branding и др. | `limits` — только `active_tournaments` и `formats` |
+
+### Что удалить у себя
+
+- **Онбординг:** страницы `frontend/src/app/(auth)/onboarding/games` и `frontend/src/app/(auth)/onboarding/accounts`, метод `api.saveOnboarding`
+  в `endpoints.ts`, `"/onboarding"` в `needsAuth` (`proxy.ts`) и в `robots.ts`.
+- **Редирект после подтверждения почты:** `frontend/src/app/(auth)/verify/page.tsx` ведёт игрока на `/onboarding/games` — нужен `/me`.
+- **Типы `SessionUser`** (`types.ts`): поле `timezone`, а в `org.limits` — `staff` и `mailings`.
+  Они читаются только на убранных экранах: `frontend/src/features/settings/billing.tsx` (47) и `frontend/src/features/org/crm/staff.tsx` (42).
+- **Права** (`permissions.ts`): `mailings.send`, `billing.manage`, `staff.manage` — вместе со ссылками сайдбара
+  в `cabinet-shell.tsx` на `/org/mailings`, `/org/staff`, `/org/branding`, `/settings/billing`.
+- **Язык и часовой пояс:** `api.saveLocale` (`/me/locale/`, экран 46) на бэкенде не появится.
+  Остаётся только язык (`User.language`, кнопка «Язык» в шапке) — эндпоинт для него будет на этапе 5.
+
+## `frontend/.env.local`
 
 ```env
 NEXT_PUBLIC_API_MOCKS=0
@@ -80,7 +106,7 @@ cd backend
 Сейчас переключатель один: `NEXT_PUBLIC_API_MOCKS=0` отправляет в API **все** вызовы. Эндпоинтов этапов 2–5
 ещё нет, поэтому с реальным API падают с 500 главная `/` (`api.bracket`), каталог `/tournaments` и
 кабинеты, например `/settings/profile` (`api.sessions`). Работают `/login`, `/register`, `/verify`,
-`/forgot`, `/reset/…`, `/onboarding/*`, `/pricing`, `/about`.
+`/forgot`, `/reset/…`, `/pricing`.
 
 Предложение: настоящий API — только для готовых групп, остальное — моки. Например, в `client.ts`:
 
@@ -94,7 +120,7 @@ export async function call<T>(mock: () => T | Promise<T>, real: () => Promise<T>
 }
 ```
 
-Группу передают методы `endpoints.ts`: `games` → `"games"`, `plans` → `"plans"`, `me` и `saveOnboarding` → `"me"`,
+Группу передают методы `endpoints.ts`: `games` → `"games"`, `plans` → `"plans"`, `me` → `"me"`,
 `login`, `register`, `verify`, `resendCode`, `forgot`, `reset`, `logout`, `checkNick` → `"auth"`.
 Учтите три места, которые завязаны на `USE_MOCKS` целиком:
 
@@ -115,11 +141,11 @@ export async function call<T>(mock: () => T | Promise<T>, real: () => Promise<T>
 берите `defaultCabinet` из `/auth/me/` или положитесь на `proxy.ts`: `/login` для вошедшего уже
 редиректит по `is_organizer` из JWT.
 
-### 5. Права модератора — сверить
+### 5. Права — брать из `/auth/me/`
 
-В `permissions.ts` у модератора есть `mailings.send`, а в ТЗ (экран 42) модератор рассылки делать **не может**.
-Бэкенд следует ТЗ. Имена прав совпадают с фронтом, а список прав роли бэкенд отдаёт в
-`/auth/me/` → `org.permissions`, так что `can()` может брать его оттуда, а не из своей матрицы.
+Имена прав совпадают с фронтом, а список прав роли бэкенд отдаёт в `/auth/me/` → `org.permissions`,
+так что `can()` может брать его оттуда, а не из своей матрицы `ROLE_MATRIX`. Матрица — только чтение:
+сотрудников добавляет команда CTS в `/admin/`, судья по умолчанию — владелец организации (ТЗ, 14.3).
 
 ### 6. Вход через Discord, Google и Telegram
 

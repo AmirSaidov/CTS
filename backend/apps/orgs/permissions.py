@@ -1,6 +1,8 @@
 """
-Матрица прав сотрудников организации (экран 42) — одна таблица в коде.
-Отдаётся фронту в /auth/me/ списком разрешений. Имена — как в frontend/src/shared/lib/permissions.ts фронта.
+Матрица прав сотрудников организации — одна таблица в коде, только чтение (ТЗ, 14.2).
+Нужна экранам 34–38; отдаётся фронту в /auth/me/ списком разрешений.
+Имена — как в frontend/src/shared/lib/permissions.ts фронта. Права убранных экранов 40, 42, 43, 47
+(mailings.send, staff.manage, billing.manage) удалены по ТЗ, 14.1.
 """
 
 from .models import OrgRole
@@ -12,9 +14,6 @@ ORG_PERMISSIONS: dict[str, frozenset[str]] = {
     "applications.decide": frozenset({OWNER, ADMIN, MOD}),  # одобрять заявки
     "results.edit": frozenset({OWNER, ADMIN, JUDGE}),  # вносить и менять результаты
     "disputes.resolve": frozenset({OWNER, ADMIN, JUDGE}),  # решать споры
-    "mailings.send": frozenset({OWNER, ADMIN}),  # рассылки
-    "billing.manage": frozenset({OWNER}),  # подписка и оплата
-    "staff.manage": frozenset({OWNER}),  # управлять командой организаторов
 }
 
 

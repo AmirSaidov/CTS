@@ -78,11 +78,6 @@ class NickAvailableSerializer(serializers.Serializer):
     available = serializers.BooleanField()
 
 
-class OnboardingSerializer(serializers.Serializer):
-    games = serializers.ListField(child=serializers.SlugField(), required=False, max_length=20)
-    city = serializers.CharField(required=False, allow_blank=True, max_length=64)
-
-
 # ───── ответ /auth/me/ (SessionUser фронта) ─────
 
 
@@ -96,8 +91,6 @@ class OrgLimitsSerializer(serializers.Serializer):
     tournaments = serializers.ListField(
         child=serializers.IntegerField(allow_null=True), help_text="[использовано, лимит]; null — без лимита"
     )
-    staff = serializers.ListField(child=serializers.IntegerField(allow_null=True))
-    mailings = serializers.ListField(child=serializers.IntegerField(allow_null=True))
 
 
 class MeOrgSerializer(serializers.Serializer):
@@ -130,8 +123,6 @@ class MeSerializer(serializers.Serializer):
     captain_of = serializers.CharField(allow_null=True)
     team = TeamRefSerializer(allow_null=True)
     org = MeOrgSerializer(allow_null=True)
-    games = serializers.ListField(child=serializers.CharField())
     default_cabinet = serializers.ChoiceField(choices=["player", "org"])
     locale = serializers.ChoiceField(choices=User.Language.choices)
-    timezone = serializers.CharField()
     unread = UnreadSerializer()

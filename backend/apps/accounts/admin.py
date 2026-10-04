@@ -23,7 +23,7 @@ class UserAdmin(BaseUserAdmin):
             "Профиль",
             {"fields": ["full_name", "phone", "city", "avatar", "banner", "bio", "main_role", "looking_for_team"]},
         ),
-        ("Настройки", {"fields": ["default_role", "language", "timezone", "date_format"]}),
+        ("Настройки", {"fields": ["default_role", "language"]}),
         (
             "Статус",
             {"fields": ["email_verified", "phone_verified", "is_active", "is_staff", "is_superuser", "deleted_at"]},

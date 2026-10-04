@@ -9,7 +9,8 @@ from .factories import DEFAULT_PASSWORD
 pytestmark = pytest.mark.django_db
 
 LOGIN = "/api/v1/auth/login/"
-ONBOARDING = "/api/v1/me/onboarding/"
+# меняющий запрос с авторизацией; для подтверждённого пользователя ничего не делает и отвечает 200
+UNSAFE = "/api/v1/auth/verify/resend/"
 ME = "/api/v1/auth/me/"
 EVIL = "https://evil.example"
 
@@ -24,7 +25,7 @@ def logged_in(user, origin=FRONTEND_ORIGIN):
 def test_foreign_origin_rejected(user):
     client = logged_in(user)
 
-    resp = client.patch(ONBOARDING, {"city": "Ош"}, format="json", HTTP_ORIGIN=EVIL)
+    resp = client.post(UNSAFE, HTTP_ORIGIN=EVIL)
 
     assert resp.status_code == 403
     assert resp.data["code"] == "csrf_failed"
@@ -33,14 +34,14 @@ def test_foreign_origin_rejected(user):
 def test_trusted_origin_passes(user):
     client = logged_in(user)
 
-    resp = client.patch(ONBOARDING, {"city": "Ош"}, format="json")
+    resp = client.post(UNSAFE)
 
     assert resp.status_code == 200
 
 
 def test_trusted_origin_with_trailing_slash_and_case(user):
     client = logged_in(user)
-    resp = client.patch(ONBOARDING, {"city": "Ош"}, format="json", HTTP_ORIGIN="HTTP://LOCALHOST:3000")
+    resp = client.post(UNSAFE, HTTP_ORIGIN="HTTP://LOCALHOST:3000")
     assert resp.status_code == 200
 
 
@@ -61,7 +62,7 @@ def test_unsafe_request_with_cookie_and_without_origin_rejected(user):
     no_origin = browser(origin=None)
     no_origin.cookies = client.cookies
 
-    resp = no_origin.patch(ONBOARDING, {"city": "Ош"}, format="json")
+    resp = no_origin.post(UNSAFE)
 
     assert resp.status_code == 403 and resp.data["code"] == "csrf_failed"
 
@@ -71,14 +72,14 @@ def test_referer_used_when_origin_missing(user):
     no_origin = browser(origin=None)
     no_origin.cookies = client.cookies
 
-    resp = no_origin.patch(ONBOARDING, {"city": "Ош"}, format="json", HTTP_REFERER=f"{FRONTEND_ORIGIN}/onboarding")
+    resp = no_origin.post(UNSAFE, HTTP_REFERER=f"{FRONTEND_ORIGIN}/verify")
 
     assert resp.status_code == 200
 
 
 def test_origin_null_rejected(user):
     client = logged_in(user)
-    resp = client.patch(ONBOARDING, {"city": "Ош"}, format="json", HTTP_ORIGIN="null")
+    resp = client.post(UNSAFE, HTTP_ORIGIN="null")
     assert resp.status_code == 403
 
 
@@ -88,7 +89,7 @@ def test_bearer_header_is_not_subject_to_origin_check(user):
     token = client.cookies["access"].value
     script = browser(origin=None)
 
-    resp = script.patch(ONBOARDING, {"city": "Ош"}, format="json", HTTP_AUTHORIZATION=f"Bearer {token}")
+    resp = script.post(UNSAFE, HTTP_AUTHORIZATION=f"Bearer {token}")
 
     assert resp.status_code == 200
 
@@ -115,8 +116,8 @@ def test_trusted_origins_come_from_settings(user, settings):
     settings.CSRF_TRUSTED_ORIGINS = ["https://cts.gg"]
     client = logged_in(user, origin="https://cts.gg")
 
-    assert client.patch(ONBOARDING, {"city": "Ош"}, format="json").status_code == 200
-    assert client.patch(ONBOARDING, {"city": "Ош"}, format="json", HTTP_ORIGIN=FRONTEND_ORIGIN).status_code == 403
+    assert client.post(UNSAFE).status_code == 200
+    assert client.post(UNSAFE, HTTP_ORIGIN=FRONTEND_ORIGIN).status_code == 403
 
 
 # ───── cookie ─────
@@ -163,7 +164,7 @@ def test_unsafe_with_only_refresh_cookie_is_401(user):
     no_access = browser()
     no_access.cookies["refresh"] = client.cookies["refresh"].value
 
-    resp = no_access.patch(ONBOARDING, {"city": "Ош"}, format="json")
+    resp = no_access.post(UNSAFE)
 
     assert resp.status_code == 401  # браузер обновит access через /auth/refresh/ и повторит
 

@@ -18,5 +18,4 @@ auth_urlpatterns = [
 
 me_urlpatterns = [
     path("", views.MeView.as_view(), name="me"),
-    path("onboarding/", views.OnboardingView.as_view(), name="me-onboarding"),
 ]
