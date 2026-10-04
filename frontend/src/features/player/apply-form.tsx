@@ -1,8 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Phone, Send } from "lucide-react";
+import { Info, Phone, Send } from "lucide-react";
 import type { Game, Team, Tournament } from "@/shared/api/types";
 import { api } from "@/shared/api/endpoints";
 import { ACCOUNT_TAGS, FORMAT_LABELS } from "@/shared/lib/labels";
@@ -47,8 +48,8 @@ export function ApplyForm({ t, team, game }: { t: Tournament; team: Team; game: 
       if (draft) return toast.success("Черновик сохранён");
       // если включён взнос — переход на оплату (страница платёжного сервиса)
       if (res.payUrl) return window.location.assign(res.payUrl);
-      toast.success("Заявка отправлена", "Статус появится в «Мои турниры»");
-      router.push("/me/tournaments?tab=applications");
+      toast.success("Заявка отправлена", "Организатор рассмотрит её, статус придёт в уведомления");
+      router.push("/me");
     } catch {
       toast.error("Не получилось отправить заявку");
     } finally {
@@ -82,6 +83,18 @@ export function ApplyForm({ t, team, game }: { t: Tournament; team: Team; game: 
             <p className="text-[14px] text-text-2">
               Выберите {main} основных игроков и до {subs} запасных.{accountLabel && ` У всех должен быть привязан ${accountLabel}.`}
             </p>
+            {accountKind && team.members.some((m) => !m.account.ok) && (
+              <p role="note" className="flex items-start gap-2 border border-gold px-4 py-3 text-[13px] text-text-2">
+                <Info size={15} className="mt-0.5 shrink-0 text-gold" aria-hidden />
+                <span>
+                  Игрок без {accountLabel} не попадёт в заявку. Аккаунт привязывается в{" "}
+                  <Link href="/me/profile" className="text-text underline underline-offset-4 hover:text-accent-hover">
+                    «Мой профиль»
+                  </Link>
+                  .
+                </span>
+              </p>
+            )}
             <div className="grid gap-3 tab:grid-cols-2">
               {team.members.map((m) => {
                 const noAccount = !!accountKind && !m.account.ok;

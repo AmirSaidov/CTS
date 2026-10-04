@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { Bell, Globe, Menu, X } from "lucide-react";
+import { Bell, Menu, X } from "lucide-react";
 import { useUser } from "@/shared/lib/stores";
 import { cn } from "@/shared/lib/cn";
 import { Button, IconButton } from "@/shared/ui/button";
@@ -16,7 +16,7 @@ export interface NavItem {
 }
 
 /** Шапка публичной части, 72px. На лендинге — свой набор пунктов-якорей. */
-export function PublicHeader({ items, variant = "default" }: { items?: NavItem[]; variant?: "default" | "landing" }) {
+export function PublicHeader({ items }: { items?: NavItem[] }) {
   const t = useTranslations("nav");
   const path = usePathname();
   const user = useUser();
@@ -24,9 +24,6 @@ export function PublicHeader({ items, variant = "default" }: { items?: NavItem[]
 
   const nav: NavItem[] = items ?? [
     { href: "/tournaments", label: t("tournaments") },
-    { href: "/schedule", label: t("schedule") },
-    { href: "/rankings", label: t("rankings") },
-    { href: "/news", label: t("news") },
     { href: "/pricing", label: t("pricing") },
   ];
 
@@ -55,7 +52,6 @@ export function PublicHeader({ items, variant = "default" }: { items?: NavItem[]
           })}
         </nav>
         <div className="ml-auto flex items-center gap-3">
-          {variant === "default" && <IconButton icon={Globe} label={t("language")} href="/settings/locale" className="hidden tab:inline-flex" />}
           {user ? (
             <>
               <IconButton icon={Bell} label={t("notifications")} href="/me/notifications" />
@@ -80,9 +76,9 @@ export function PublicHeader({ items, variant = "default" }: { items?: NavItem[]
       </div>
 
       {open && (
-        <div className="absolute inset-x-0 top-full flex h-[calc(100dvh-var(--header-h))] flex-col gap-1 overflow-y-auto border-t border-line bg-bg px-4 py-6 desk:hidden">
-          {nav.map((it) => (
-            <Link key={it.href} href={it.href} className="font-display border-b border-line py-4 text-[28px]">
+        <div className="animate-drop absolute inset-x-0 top-full flex h-[calc(100dvh-var(--header-h))] flex-col gap-1 overflow-y-auto border-t border-line bg-bg px-4 py-6 desk:hidden">
+          {nav.map((it, i) => (
+            <Link key={it.href} href={it.href} style={{ "--i": i } as React.CSSProperties} className="animate-drop-item font-display border-b border-line py-4 text-[28px]">
               {it.label}
             </Link>
           ))}

@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Check, Minus } from "lucide-react";
 import { api } from "@/shared/api/endpoints";
 import { PLAN_COMPARISON } from "@/shared/api/mocks/data";
-import { getSession } from "@/shared/auth/session";
 import { Container } from "@/shared/ui/page";
 import { Eyebrow } from "@/shared/ui/misc";
 import { Segmented } from "@/shared/ui/tabs";
@@ -14,7 +13,7 @@ export const metadata: Metadata = { title: "Тарифы", description: "Free, P
 
 const FAQ = [
   { q: "Можно ли начать без оплаты?", a: "Да. Тариф Free бессрочный — переходите на Pro, когда турниров станет больше." },
-  { q: "Как оплатить подписку?", a: "Картой через [ПЛАТЁЖНЫЙ СЕРВИС] или по счёту для юрлиц — реквизиты указываются в настройках подписки." },
+  { q: "Как перейти на Pro?", a: "Напишите нам в Telegram — подключим тариф вручную и выставим счёт. Онлайн-оплата появится позже." },
   { q: "Берёте ли вы комиссию с взносов?", a: "[УТОЧНИТЬ У ЗАКАЗЧИКА]" },
   { q: "Что будет с турнирами, если отменить Pro?", a: "Турниры и история сохранятся. Pro-функции (брендирование, Telegram-рассылки, взносы) отключатся в конце оплаченного периода." },
 ];
@@ -27,7 +26,7 @@ function Cell({ v }: { v: string }) {
 
 export default async function PricingPage({ searchParams }: { searchParams: Promise<{ period?: string }> }) {
   const { period = "month" } = await searchParams;
-  const [plans, user] = await Promise.all([api.plans(), getSession()]);
+  const plans = await api.plans();
   const discount = plans.find((p) => p.key === "pro")?.yearDiscount ?? "[N]";
 
   return (
@@ -50,7 +49,7 @@ export default async function PricingPage({ searchParams }: { searchParams: Prom
       <Container className="flex flex-col gap-24 pb-24">
         <div className="grid items-start gap-6 desk:grid-cols-3 desk:pt-6">
           {plans.map((p) => (
-            <PlanCard key={p.key} plan={p} period={period === "year" ? "year" : "month"} authed={!!user} />
+            <PlanCard key={p.key} plan={p} period={period === "year" ? "year" : "month"} />
           ))}
         </div>
 

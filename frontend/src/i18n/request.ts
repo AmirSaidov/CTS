@@ -1,9 +1,11 @@
 import { getRequestConfig } from "next-intl/server";
 import { cookies } from "next/headers";
+import { featureOn } from "@/shared/lib/features";
 
 /*
  * i18n без префикса локали в URL: язык хранится в cookie NEXT_LOCALE (меняется на экране 46).
- * RU — основной; KY и EN подключаются по мере готовности переводов (недостающие ключи берутся из RU).
+ * В MVP — только RU: экран 46 отложен на v2, cookie учитывается лишь при FEATURE_LOCALE=true.
+ * KY и EN подключаются по мере готовности переводов (недостающие ключи берутся из RU).
  */
 export const LOCALES = ["ru", "ky", "en"] as const;
 export type Locale = (typeof LOCALES)[number];
@@ -11,7 +13,7 @@ export type Locale = (typeof LOCALES)[number];
 export default getRequestConfig(async () => {
   const store = await cookies();
   const fromCookie = store.get("NEXT_LOCALE")?.value as Locale | undefined;
-  const locale: Locale = fromCookie && LOCALES.includes(fromCookie) ? fromCookie : "ru";
+  const locale: Locale = featureOn("LOCALE") && fromCookie && LOCALES.includes(fromCookie) ? fromCookie : "ru";
   const ru = (await import("../../messages/ru.json")).default;
   const own = locale === "ru" ? ru : deepMerge(ru, (await import(`../../messages/${locale}.json`)).default);
   return { locale, messages: own, timeZone: "Asia/Bishkek" };

@@ -14,7 +14,7 @@ export function DevRoleSwitcher() {
   const user = useUser();
   const [open, setOpen] = useState(false);
 
-  const current: MockRole = !user ? "guest" : user.isPlatformAdmin ? "admin" : user.org?.role === "judge" ? "judge" : user.isOrganizer ? "organizer" : user.captainOf ? "captain" : "player";
+  const current: MockRole = !user ? "guest" : user.isOrganizer ? "organizer" : user.captainOf ? "captain" : "player";
 
   const pick = (r: MockRole) => {
     setMockRole(r);
@@ -25,7 +25,7 @@ export function DevRoleSwitcher() {
   return (
     <div className="fixed bottom-4 left-4 z-40 max-tab:bottom-20">
       {open && (
-        <div className="mb-2 flex w-56 flex-col border border-line-strong bg-elev-1 p-1">
+        <div className="animate-drop mb-2 flex w-56 flex-col border border-line-strong bg-elev-1 p-1">
           <span className="mono-label px-3 pt-2 pb-1">DEV · роль (моки)</span>
           {MOCK_ROLES.map((r) => (
             <button key={r} type="button" onClick={() => pick(r)} className={cn("px-3 py-2 text-left text-[13px] hover:bg-elev-2", r === current && "bg-elev-2 font-semibold")}>

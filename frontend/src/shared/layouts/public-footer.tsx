@@ -4,9 +4,7 @@ import { getTranslations } from "next-intl/server";
 export async function PublicFooter() {
   const t = await getTranslations("footer");
   const links = [
-    ["/about", t("about")],
     ["/pricing", t("pricing")],
-    ["/about#faq", t("faq")],
     ["/legal/privacy", t("privacy")],
     ["/legal/terms", t("terms")],
   ];

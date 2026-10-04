@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { api } from "@/shared/api/endpoints";
 import { orNotFound } from "@/shared/api/server";
 import { Badge } from "@/shared/ui/badge";
@@ -155,10 +154,10 @@ export default async function TournamentPage({ params, searchParams }: Props) {
         <Container as="section" className="py-14">
           <div className="grid gap-4 tab:grid-cols-2 desk:grid-cols-4">
             {teams.map((team) => (
-              <Link key={team.slug} href={`/t/${team.slug}`} className="flex items-center gap-4 border border-line bg-elev-1 p-5 transition-colors hover:border-line-strong">
+              <div key={team.slug} className="flex items-center gap-4 border border-line bg-elev-1 p-5">
                 <TeamLogo tag={team.tag} size={48} />
                 <span className="font-display text-[22px]">{team.name}</span>
-              </Link>
+              </div>
             ))}
           </div>
         </Container>

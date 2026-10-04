@@ -61,7 +61,6 @@ export function ManageHeader({ t, counts }: { t: Tournament; counts: { applicati
           { key: "applications", label: "Заявки", count: counts.applications, href: `${base}/applications` },
           { key: "bracket", label: "Сетка", href: `${base}/bracket` },
           { key: "matches", label: "Матчи", count: counts.matches, href: `${base}/matches` },
-          { key: "schedule", label: "Расписание", href: `${base}/schedule` },
           { key: "checkin", label: "Чек-ин", href: `${base}/checkin` },
         ]}
       />

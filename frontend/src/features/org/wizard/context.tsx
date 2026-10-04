@@ -13,10 +13,6 @@ interface Ctx {
   savedAt: Date | null;
   saving: boolean;
   dirty: boolean;
-  banner: File | null;
-  setBanner: (f: File | null) => void;
-  logo: File | null;
-  setLogo: (f: File | null) => void;
 }
 
 const WizardCtx = createContext<Ctx | null>(null);
@@ -43,8 +39,6 @@ export function WizardProvider({ initial, children }: { initial: Draft; children
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
   const [savedAt, setSavedAt] = useState<Date | null>(null);
-  const [banner, setBanner] = useState<File | null>(null);
-  const [logo, setLogo] = useState<File | null>(null);
   const stepRef = useRef(1);
 
   const set = useCallback(<K extends keyof Draft>(k: K, v: Draft[K]) => {
@@ -92,7 +86,7 @@ export function WizardProvider({ initial, children }: { initial: Draft; children
     return () => clearTimeout(t);
   }, [dirty, draft]);
 
-  return <WizardCtx.Provider value={{ draft, set, patch, save, savedAt, saving, dirty, banner, setBanner, logo, setLogo }}>{children}</WizardCtx.Provider>;
+  return <WizardCtx.Provider value={{ draft, set, patch, save, savedAt, saving, dirty }}>{children}</WizardCtx.Provider>;
 }
 
 export function useWizard() {

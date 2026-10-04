@@ -138,7 +138,6 @@ export const api = {
     call(() => (token === "expired" ? mockError(410, "Ссылка устарела") : { ok: true }), () => request<{ ok: true }>("/auth/password/reset/", { method: "POST", body: { token, password } })),
   logout: () => call(() => ({ ok: true }), () => request<{ ok: true }>("/auth/logout/", { method: "POST" })),
   checkNick: (nick: string) => call(() => ({ available: !["aktan", "admin", "cts"].includes(nick.toLowerCase()) }), () => request<{ available: boolean }>("/auth/nick-available/", { query: { nick } })),
-  saveOnboarding: (body: { games?: string[]; city?: string }) => call(() => ({ ok: true }), () => request<{ ok: true }>("/me/onboarding/", { method: "PATCH", body })),
 
   // ───── настройки аккаунта ─────
   sessions: () => call<AuthSession[]>(() => db.SESSIONS, () => request("/me/sessions/")),
@@ -166,6 +165,8 @@ export const api = {
       db.NOTIFICATIONS.forEach((n) => { if (ids === "all" || ids.includes(n.id)) n.read = true; });
       return { ok: true };
     }, () => request<{ ok: true }>("/me/notifications/read/", { method: "POST", body: { ids } })),
+  // TODO: удалить вместе со страницами онбординга (экраны 19–20 убраны, на бэкенде 404)
+  saveOnboarding: (body: { games?: string[]; city?: string }) => call(() => ({ ok: true }), () => request<{ ok: true }>("/me/onboarding/", { method: "PATCH", body })),
   myInvites: () => call<Invite[]>(() => db.INVITES, () => request("/me/invites/")),
   answerInvite: (id: string, accept: boolean) =>
     call(() => {
@@ -228,8 +229,8 @@ export const api = {
     call(() => ({ id: id ?? "t3", savedAt: new Date().toISOString() }), () =>
       request<{ id: string; savedAt: string }>(id ? `/org/tournaments/${id}/` : "/org/tournaments/", { method: id ? "PATCH" : "POST", body: { ...body, step } }),
     ),
-  publish: (id: string, body: { visibility: "public" | "link"; notify: boolean }) =>
-    call(() => ({ ok: true }), () => request<{ ok: true }>(`/org/tournaments/${id}/publish/`, { method: "POST", body })),
+  // MVP: турнир всегда публичный — видимость и рассылка подписчикам не передаются
+  publish: (id: string) => call(() => ({ ok: true }), () => request<{ ok: true }>(`/org/tournaments/${id}/publish/`, { method: "POST" })),
   applications: (id: string) => call<Application[]>(() => db.APPLICATIONS, () => request(`/org/tournaments/${id}/applications/`)),
   decideApplications: (id: string, ids: string[], approve: boolean, reason?: string) =>
     call(() => {
@@ -254,6 +255,13 @@ export const api = {
       if (mm) mm.status = "confirmed";
       return { ok: true };
     }, () => request<{ ok: true }>(`/org/tournaments/${id}/matches/${code}/confirm/`, { method: "POST" })),
+  // время матча — простое поле в карточке матча (слоты и площадки, экран 37, — v3)
+  setMatchTime: (id: string, code: string, startAt: string) =>
+    call(() => {
+      const mm = db.ORG_MATCHES.find((x) => x.code === code);
+      if (mm) mm.startAt = startAt;
+      return { ok: true };
+    }, () => request<{ ok: true }>(`/org/tournaments/${id}/matches/${code}/`, { method: "PATCH", body: { startAt } })),
   slots: (id: string, day: number) => call(() => ({ venues: db.SCHEDULE_VENUES, slots: db.SCHEDULE_SLOTS, unscheduled: db.UNSCHEDULED, day, date: "2026-10-10" }), () =>
     request<{ venues: typeof db.SCHEDULE_VENUES; slots: typeof db.SCHEDULE_SLOTS; unscheduled: typeof db.UNSCHEDULED; day: number; date: string }>(`/org/tournaments/${id}/slots/`, { query: { day } })),
   moveSlot: (id: string, body: { code: string; venue: string; start: string }) =>

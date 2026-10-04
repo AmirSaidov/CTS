@@ -2,13 +2,13 @@
 
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Check, Flag, Pencil } from "lucide-react";
+import { Check, Clock, Flag, Pencil } from "lucide-react";
 import type { Dispute, Match } from "@/shared/api/types";
 import { api } from "@/shared/api/endpoints";
 import { qk } from "@/shared/api/keys";
 import { MATCH_STATUS } from "@/shared/lib/labels";
 import { can } from "@/shared/lib/permissions";
-import { ago } from "@/shared/lib/format";
+import { ago, fmtDayTime } from "@/shared/lib/format";
 import { toast, useUser } from "@/shared/lib/stores";
 import { cn } from "@/shared/lib/cn";
 import { Badge } from "@/shared/ui/badge";
@@ -32,6 +32,7 @@ export function ResultsScreen({ id, initial }: { id: string; initial: Match[] })
   const [filter, setFilter] = useState<"all" | "dispute" | "awaiting">("all");
   const [selected, setSelected] = useState<string | null>(matches.find((m) => m.status === "dispute")?.code ?? null);
   const [edit, setEdit] = useState<Match | null>(null);
+  const [timeOf, setTimeOf] = useState<Match | null>(null);
   const [forfeit, setForfeit] = useState<Match | null>(null);
 
   const confirm = useMutation({
@@ -102,10 +103,11 @@ export function ResultsScreen({ id, initial }: { id: string; initial: Match[] })
             ]}
           />
         </CardHeader>
-        <Table minWidth={680} label="Матчи турнира">
+        <Table minWidth={820} label="Матчи турнира">
           <THead>
             <Th>Код</Th>
             <Th sticky>Матч</Th>
+            <Th>Время</Th>
             <Th>Счёт</Th>
             <Th>Статус</Th>
             <Th align="right" />
@@ -119,12 +121,23 @@ export function ResultsScreen({ id, initial }: { id: string; initial: Match[] })
                   <Td sticky>
                     <span className="flex items-center gap-3">
                       <TeamLogo tag={m.a.team?.tag ?? "?"} size={28} />
-                      <span className="font-semibold">
+                      <span className="font-semibold whitespace-nowrap">
                         {m.a.team?.name ?? "TBD"} vs {m.b.team?.name ?? "TBD"}
                       </span>
                     </span>
                   </Td>
-                  <Td className="font-display text-[20px]">{m.a.score !== null && m.b.score !== null ? `${m.a.score} : ${m.b.score}` : "—"}</Td>
+                  <Td className="mono text-[12px] whitespace-nowrap">
+                    {canEdit && ["tbd", "scheduled"].includes(m.status) ? (
+                      <button type="button" className="flex items-center gap-1.5 text-text-2 hover:text-text" onClick={() => setTimeOf(m)} aria-label={`Время матча ${m.code}`}>
+                        <Clock size={13} aria-hidden /> {m.startAt ? fmtDayTime(m.startAt) : "Назначить"}
+                      </button>
+                    ) : m.startAt ? (
+                      fmtDayTime(m.startAt)
+                    ) : (
+                      "—"
+                    )}
+                  </Td>
+                  <Td className="font-display text-[20px] whitespace-nowrap">{m.a.score !== null && m.b.score !== null ? `${m.a.score} : ${m.b.score}` : "—"}</Td>
                   <Td>
                     <Badge tone={m.status === "tbd" ? "muted" : st.tone} dot={st.dot}>
                       {m.status === "tbd" ? "Ожидает" : st.label}
@@ -140,6 +153,7 @@ export function ResultsScreen({ id, initial }: { id: string; initial: Match[] })
       {selected ? <DisputePanel id={id} code={selected} onResolved={() => setSelected(null)} /> : <p className="border border-dashed border-text-4 p-6 text-[14px] text-text-3">Выберите спорный матч, чтобы рассмотреть заявления команд.</p>}
 
       <ScoreModal id={id} m={edit} onClose={() => setEdit(null)} />
+      <TimeModal id={id} m={timeOf} onClose={() => setTimeOf(null)} />
       <ConfirmModal
         open={!!forfeit}
         onClose={() => setForfeit(null)}
@@ -234,6 +248,59 @@ function DisputePanel({ id, code, onResolved }: { id: string; code: string; onRe
         <Placeholder label="Скриншот в полном размере" aspect="16 / 9" className="border border-line" />
       </Modal>
     </section>
+  );
+}
+
+/** Время матча (UTC+6) — обычное поле даты и времени вместо таймлайна слотов */
+function TimeModal({ id, m, onClose }: { id: string; m: Match | null; onClose: () => void }) {
+  const qc = useQueryClient();
+  const [value, setValue] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [prev, setPrev] = useState<Match | null>(null);
+  if (m !== prev) {
+    setPrev(m);
+    setValue(m?.startAt?.slice(0, 16) ?? "");
+  }
+  return (
+    <Modal
+      open={!!m}
+      onClose={onClose}
+      title={`Время · ${m?.code ?? ""}`}
+      size="sm"
+      footer={
+        <>
+          <Button variant="ghost" onClick={onClose}>
+            Отмена
+          </Button>
+          <Button
+            variant="primary"
+            disabled={!value}
+            loading={busy}
+            onClick={async () => {
+              if (!m) return;
+              setBusy(true);
+              try {
+                const startAt = `${value}:00+06:00`;
+                await api.setMatchTime(id, m.code, startAt);
+                qc.setQueryData<Match[]>(qk.orgMatches(id), (l) => l?.map((x) => (x.code === m.code ? { ...x, startAt } : x)));
+                toast.success("Время матча сохранено", "Капитаны получат уведомление");
+                onClose();
+              } catch {
+                toast.error("Не удалось сохранить время");
+              } finally {
+                setBusy(false);
+              }
+            }}
+          >
+            Сохранить
+          </Button>
+        </>
+      }
+    >
+      <Field label="Дата и время" htmlFor="mt" hint="Время — UTC+6, Бишкек">
+        <Input id="mt" type="datetime-local" icon={Clock} value={value} onChange={(e) => setValue(e.target.value)} />
+      </Field>
+    </Modal>
   );
 }
 

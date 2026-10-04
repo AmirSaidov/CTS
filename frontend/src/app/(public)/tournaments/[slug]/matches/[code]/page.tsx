@@ -20,7 +20,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function MatchPage({ params, searchParams }: Props) {
   const { slug, code } = await params;
   const { tab } = await searchParams;
-  const [m, stats] = await Promise.all([orNotFound(api.match(slug, code)), api.matchStats(slug, code)]);
+  const [m, rosters] = await Promise.all([orNotFound(api.match(slug, code)), api.matchStats(slug, code)]);
   const live = m.status === "live";
 
   return (
@@ -47,7 +47,7 @@ export default async function MatchPage({ params, searchParams }: Props) {
           <Badge>{m.stage}</Badge>
         </div>
       </div>
-      <MatchLive slug={slug} initial={m} stats={stats} initialTab={tab} />
+      <MatchLive slug={slug} initial={m} rosters={rosters} initialTab={tab === "stats" ? "overview" : tab} />
     </Container>
   );
 }

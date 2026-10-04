@@ -5,8 +5,8 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import {
-  ArrowLeft, Bell, ChartColumn, CreditCard, Database, Gamepad2, Globe, House, LogOut, Mail, Menu, Newspaper, Palette, Plus,
-  Search, Send, Shield, SlidersHorizontal, Swords, Trash, Trophy, User, Users, X, type LucideIcon,
+  ArrowLeft, Bell, ChartColumn, CreditCard, Gamepad2, House, LogOut, Menu, Newspaper, Plus,
+  Search, Shield, SlidersHorizontal, Swords, Trophy, User, Users, X, type LucideIcon,
 } from "lucide-react";
 import { api } from "@/shared/api/endpoints";
 import { useUser } from "@/shared/lib/stores";
@@ -54,9 +54,7 @@ function useMenu(kind: CabinetKind): { sub: string; crumb: string; sections: Sec
               { href: "/me", label: tp("overview"), icon: House, exact: true },
               { href: "/me/profile", label: tp("profile"), icon: User },
               { href: "/me/team", label: tp("team"), icon: Users },
-              { href: "/me/tournaments", label: tp("tournaments"), icon: Trophy },
               { href: "/me/matches", label: tp("matches"), icon: Swords },
-              { href: "/me/invites", label: tp("invites"), icon: Mail, count: unread.invites },
               { href: "/me/notifications", label: tp("notifications"), icon: Bell, count: unread.notifications },
             ],
           },
@@ -74,18 +72,12 @@ function useMenu(kind: CabinetKind): { sub: string; crumb: string; sections: Sec
               { href: "/org", label: to("overview"), icon: House, exact: true },
               { href: "/org/tournaments", label: to("tournaments"), icon: Trophy, count: 5, countMuted: true },
               { href: "/org/matches", label: to("matches"), icon: Swords },
-              { href: "/org/participants", label: to("participants"), icon: Database },
-              { href: "/org/mailings", label: to("mailings"), icon: Send, perm: "mailings.send" },
-              { href: "/org/analytics", label: to("analytics"), icon: ChartColumn },
-              { href: "/org/staff", label: to("staff"), icon: Users, perm: "staff.manage" },
-              { href: "/org/branding", label: to("branding"), icon: Palette, perm: "staff.manage" },
             ],
           },
           {
             title: to("account"),
             items: [
               { href: "/settings/profile", label: to("settings"), icon: SlidersHorizontal },
-              { href: "/settings/billing", label: to("billing"), icon: CreditCard, perm: "billing.manage" },
             ],
           },
         ],
@@ -99,10 +91,6 @@ function useMenu(kind: CabinetKind): { sub: string; crumb: string; sections: Sec
             title: ts("section"),
             items: [
               { href: "/settings/profile", label: ts("profile"), icon: User },
-              { href: "/settings/notifications", label: ts("notifications"), icon: Bell },
-              { href: "/settings/locale", label: ts("locale"), icon: Globe },
-              { href: "/settings/billing", label: ts("billing"), icon: CreditCard },
-              { href: "/settings/delete", label: ts("delete"), icon: Trash },
             ],
           },
           {
@@ -302,7 +290,7 @@ function UserMenu({ kind }: { kind: CabinetKind }) {
         <Avatar tag={user.tag} size={40} />
       </button>
       {open && (
-        <div role="menu" className="absolute top-12 right-0 z-30 flex w-64 flex-col border border-line-strong bg-elev-1 p-1">
+        <div role="menu" className="animate-drop absolute top-12 right-0 z-30 flex w-64 flex-col border border-line-strong bg-elev-1 p-1">
           <div className="border-b border-line px-3 py-3">
             <p className="text-[15px] font-semibold">{user.nick}</p>
             <p className="text-[12px] text-text-3">{user.email}</p>
@@ -313,14 +301,6 @@ function UserMenu({ kind }: { kind: CabinetKind }) {
               {kind === "org" ? t("playerCabinet") : t("orgPanel")}
             </MenuLink>
           )}
-          {user.isPlatformAdmin && kind !== "control" && (
-            <MenuLink href="/control/users" icon={Shield}>
-              Админка
-            </MenuLink>
-          )}
-          <MenuLink href={`/p/${user.nick.toLowerCase()}`} icon={User}>
-            Публичный профиль
-          </MenuLink>
           <MenuLink href="/settings/profile" icon={SlidersHorizontal}>
             {t("settings")}
           </MenuLink>
