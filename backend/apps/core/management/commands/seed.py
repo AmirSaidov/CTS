@@ -72,8 +72,9 @@ GAMES = [
     ("eafc", "EA FC", "FC", "EA", 1, 0, "manual", "beta", ["single", "groups", "league"], []),
 ]
 
-# Цены не утверждены (открытый вопрос к заказчику) — null, фронт показывает заглушку.
-# Лимит рассылок Free и Лиги — тоже «уточнить»: значения ниже — временные, правятся в админке.
+# Цены не утверждены (открытый вопрос к заказчику) — null, API отдаёт «—».
+# Лимиты — только активные турниры и форматы сетки (ТЗ, 14.1). Пункты features — тексты страницы тарифов;
+# убрать из них брендирование, рассылки и т. п. — вопрос к дизайнеру (14.3), пока как в макете.
 PLANS: list[dict[str, Any]] = [
     {
         "code": "free",
@@ -87,16 +88,7 @@ PLANS: list[dict[str, Any]] = [
         "price_year": 0,
         "limits": {
             "active_tournaments": 3,
-            "staff": 1,
-            "mailings_per_month": 100,
             "formats": ["single", "double", "groups"],
-            "branding": False,
-            "telegram": False,
-            "export": False,
-            "analytics": "basic",
-            "entry_fee": False,
-            "custom_domain": False,
-            "seasons": False,
         },
         "features": [
             "До 3 активных турниров",
@@ -117,16 +109,7 @@ PLANS: list[dict[str, Any]] = [
         "price_year": None,
         "limits": {
             "active_tournaments": None,
-            "staff": 3,
-            "mailings_per_month": 1000,
             "formats": None,
-            "branding": True,
-            "telegram": True,
-            "export": True,
-            "analytics": "advanced",
-            "entry_fee": True,
-            "custom_domain": False,
-            "seasons": False,
         },
         "features": [
             "Безлимит турниров",
@@ -148,16 +131,7 @@ PLANS: list[dict[str, Any]] = [
         "price_year": None,
         "limits": {
             "active_tournaments": None,
-            "staff": 10,
-            "mailings_per_month": 10000,
             "formats": None,
-            "branding": True,
-            "telegram": True,
-            "export": True,
-            "analytics": "advanced",
-            "entry_fee": True,
-            "custom_domain": True,
-            "seasons": True,
         },
         "features": [
             "Всё из Pro",

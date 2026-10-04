@@ -24,10 +24,6 @@ class Organization(TimeStampedModel, SoftDeleteModel):
         settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="owned_orgs", verbose_name="владелец"
     )
     logo = models.ImageField("логотип", upload_to="orgs/logos/", blank=True)
-    # по умолчанию — стальная палитра макета (раздел 13.2)
-    accent_color = models.CharField("акцентный цвет", max_length=7, default="#8A9BB4")
-    show_sponsors = models.BooleanField("показывать спонсоров", default=False)
-    custom_domain = models.CharField("свой домен", max_length=253, blank=True)
     verification_status = models.CharField(
         "верификация", max_length=16, choices=Verification.choices, default=Verification.NONE
     )

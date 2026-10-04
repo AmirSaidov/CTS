@@ -47,12 +47,13 @@ def ensure_within_limit(org: Organization, limit: str, used: int) -> None:
         )
 
 
-def ensure_feature(org: Organization, feature: str) -> None:
+def ensure_format_allowed(org: Organization, bracket_format: str) -> None:
+    """Формат сетки не входит в тариф → 403 plan_limit_reached."""
     plan = current_plan(org)
-    if not plan.has_feature(feature):
+    if not plan.allows("formats", bracket_format):
         raise ApiError(
             code="plan_limit_reached",
-            message=f"Недоступно на тарифе {plan.name}",
+            message=f"Формат недоступен на тарифе {plan.name}",
             status_code=403,
-            extra={"limit": feature, "plan": plan.code},
+            extra={"limit": "formats", "plan": plan.code},
         )

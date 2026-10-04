@@ -24,10 +24,9 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from apps.core import ratelimit
 from apps.core.exceptions import ApiError, Gone, TooManyRequests
 from apps.core.net import client_ip
-from apps.games.models import Game
 
 from . import useragent
-from .models import LegalConsent, User, UserGame, UserSession, VerificationCode
+from .models import LegalConsent, User, UserSession, VerificationCode
 from .tasks import send_email
 from .tokens import issue_refresh
 
@@ -309,25 +308,3 @@ def reset_password(token: str, password: str) -> User:
     user.save(update_fields=["password"])  # смена хеша делает ссылку одноразовой
     revoke_all_sessions(user)
     return user
-
-
-# ───────────────────────── онбординг ─────────────────────────
-
-
-@transaction.atomic
-def save_onboarding(user: User, games: list[str] | None, city: str | None) -> None:
-    if games is not None:
-        found = {g.slug: g for g in Game.objects.filter(slug__in=games).exclude(status=Game.Status.OFF)}
-        unknown = [slug for slug in games if slug not in found]
-        if unknown:
-            raise ApiError(
-                code="validation_error",
-                message=_("Проверьте поля"),
-                fields={"games": [_("Неизвестная игра: %(s)s") % {"s": ", ".join(unknown)}]},
-            )
-        UserGame.objects.filter(user=user).exclude(game__slug__in=games).delete()
-        existing = set(UserGame.objects.filter(user=user).values_list("game__slug", flat=True))
-        UserGame.objects.bulk_create([UserGame(user=user, game=found[s]) for s in games if s not in existing])
-    if city is not None:
-        user.city = city.strip()
-        user.save(update_fields=["city"])

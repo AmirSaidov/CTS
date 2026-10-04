@@ -81,11 +81,11 @@ if access and refresh:
 status, me, _ = call("GET", "/api/v1/auth/me/", origin=None)
 check("GET /auth/me/ без Origin (как SSR)", status == 200 and me["nick"] == "Aktan", (status, me))
 
-status, body, _ = call("PATCH", "/api/v1/me/onboarding/", {"city": "Бишкек"})
-check("PATCH /me/onboarding/ со своим Origin", status == 200, (status, body))
+status, body, _ = call("POST", "/api/v1/auth/verify/resend/")
+check("POST /auth/verify/resend/ со своим Origin", status == 200, (status, body))
 
-status, body, _ = call("PATCH", "/api/v1/me/onboarding/", {"city": "Ош"}, origin="https://evil.example")
-check("PATCH с чужим Origin → 403 csrf_failed", status == 403 and body["code"] == "csrf_failed", (status, body))
+status, body, _ = call("POST", "/api/v1/auth/verify/resend/", origin="https://evil.example")
+check("POST с чужим Origin → 403 csrf_failed", status == 403 and body["code"] == "csrf_failed", (status, body))
 
 status, body, _ = call("POST", "/api/v1/auth/refresh/")
 check("POST /auth/refresh/", status == 200, (status, body))
@@ -106,24 +106,24 @@ check(
     "/login для вошедшего → редирект в кабинет", status in (302, 307) and "/me" in headers.get("Location", ""), status
 )
 check("SSR /pricing узнаёт пользователя по cookie", pricing_sees_user())
-status, _, headers = call("GET", "/onboarding/games", origin=None)
-check("закрытая страница /onboarding/games открывается", status == 200, (status, headers.get("Location")))
+status, _, headers = call("GET", "/verify", origin=None)
+check("закрытая страница /verify открывается", status == 200, (status, headers.get("Location")))
 
 # access истёк (15 минут) — остался только refresh
 if access:
     jar.clear(domain=access.domain, path=access.path, name="access")
-status, _, headers = call("GET", "/onboarding/games", origin=None)
+status, _, headers = call("GET", "/verify", origin=None)
 check("без access: proxy.ts пускает по refresh", status == 200, (status, headers.get("Location")))
 check("без access: SSR всё ещё узнаёт пользователя (GET по refresh)", pricing_sees_user())
-status, body, _ = call("PATCH", "/api/v1/me/onboarding/", {"city": "Ош"})
-check("без access: PATCH → 401, браузер обновит токен", status == 401, (status, body))
+status, body, _ = call("POST", "/api/v1/auth/verify/resend/")
+check("без access: POST → 401, браузер обновит токен", status == 401, (status, body))
 status, body, _ = call("POST", "/api/v1/auth/refresh/")
 check("refresh восстанавливает access", status == 200 and cookie("access") is not None, (status, body))
 
 status, body, _ = call("POST", "/api/v1/auth/logout/")
 check("POST /auth/logout/", status == 200, (status, body))
 check("после выхода SSR видит гостя", not pricing_sees_user())
-status, _, headers = call("GET", "/onboarding/games", origin=None)
+status, _, headers = call("GET", "/verify", origin=None)
 check("после выхода — редирект на /login", status in (302, 307) and "/login" in headers.get("Location", ""), status)
 
 print()

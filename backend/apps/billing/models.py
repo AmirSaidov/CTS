@@ -1,6 +1,8 @@
 """
 Тарифы и подписки (раздел 9). Лимиты лежат в Plan.limits и редактируются из админки —
-в коде только plan.has_feature("branding") и plan.limit("active_tournaments").
+в коде только plan.limit("active_tournaments") и plan.allows("formats", ...).
+По ТЗ, 14.1 лимитов два: активные турниры и форматы сетки. Оплаты нет (14.3) —
+тариф организации меняет команда CTS в /admin/ через Subscription.
 Деньги — в тыйынах целым числом + код валюты.
 """
 
@@ -33,7 +35,7 @@ class Plan(TimeStampedModel):
         "лимиты и возможности",
         default=dict,
         blank=True,
-        help_text='{"active_tournaments": 3, "staff": 1, "formats": ["single"], "branding": false}; null — без лимита',
+        help_text='{"active_tournaments": 3, "formats": ["single", "double", "groups"]}; null — без лимита',
     )
     features = models.JSONField("пункты для страницы тарифов", default=list, blank=True)
     is_active = models.BooleanField("активен", default=True)
@@ -51,9 +53,6 @@ class Plan(TimeStampedModel):
         """Числовой лимит; None — без лимита."""
         value = self.limits.get(name)
         return None if value is None else int(value)
-
-    def has_feature(self, name: str) -> bool:
-        return bool(self.limits.get(name, False))
 
     def allows(self, name: str, value: Any) -> bool:
         """Разрешено ли значение из списка (например, формат сетки). Отсутствие списка — разрешено всё."""

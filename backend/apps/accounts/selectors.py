@@ -23,8 +23,6 @@ def me_payload(user: User) -> dict[str, Any]:
             "permissions": permissions_for(membership.role),
             "limits": {
                 "tournaments": [used["active_tournaments"], plan.limit("active_tournaments")],
-                "staff": [used["staff"], plan.limit("staff")],
-                "mailings": [used["mailings_per_month"], plan.limit("mailings_per_month")],
             },
         }
     return {
@@ -44,9 +42,7 @@ def me_payload(user: User) -> dict[str, Any]:
         "captain_of": None,
         "team": None,
         "org": org,
-        "games": list(user.user_games.values_list("game__slug", flat=True)),
         "default_cabinet": "org" if user.default_role == User.DefaultRole.ORG and membership else "player",
         "locale": user.language,
-        "timezone": user.timezone,
         "unread": {"notifications": 0, "invites": 0},
     }

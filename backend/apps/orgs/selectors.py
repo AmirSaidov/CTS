@@ -14,9 +14,5 @@ def primary_membership(user: User) -> OrgMember | None:
 
 
 def usage(org: Organization) -> dict[str, int]:
-    """Использование лимитов тарифа. Турниры и рассылки подключатся с их приложениями (этапы 2–4)."""
-    return {
-        "active_tournaments": 0,
-        "staff": org.members.count(),
-        "mailings_per_month": 0,
-    }
+    """Использование лимитов тарифа. Активные турниры подключатся с приложением tournaments (этап 4)."""
+    return {"active_tournaments": 0}

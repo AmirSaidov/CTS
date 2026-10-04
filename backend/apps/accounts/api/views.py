@@ -26,7 +26,6 @@ from .serializers import (
     MeSerializer,
     NickAvailableSerializer,
     NickQuerySerializer,
-    OnboardingSerializer,
     RegisterSerializer,
     ResetSerializer,
     VerifySerializer,
@@ -199,18 +198,3 @@ class MeView(APIView):
     @extend_schema(tags=["me"], responses={200: MeSerializer, 401: ERR})
     def get(self, request: Request) -> Response:
         return Response(MeSerializer(me_payload(_user(request))).data)
-
-
-class OnboardingView(APIView):
-    """Онбординг (экраны 19–20): выбранные игры и город одним эндпоинтом (раздел 13.2)."""
-
-    permission_classes = [IsAuthenticated]
-
-    @extend_schema(tags=["me"], request=OnboardingSerializer, responses={200: OkSerializer, 400: ERR, 401: ERR})
-    def patch(self, request: Request) -> Response:
-        serializer = OnboardingSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        services.save_onboarding(
-            _user(request), serializer.validated_data.get("games"), serializer.validated_data.get("city")
-        )
-        return Response(OK)
