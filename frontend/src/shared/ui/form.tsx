@@ -1,7 +1,7 @@
 "use client";
 
 import { forwardRef, useId, useState } from "react";
-import { ChevronDown, Eye, EyeOff, Lock, type LucideIcon } from "lucide-react";
+import { Eye, EyeOff, Lock, type LucideIcon } from "lucide-react";
 import { cn } from "@/shared/lib/cn";
 
 /* Поля форм: фон elev-1/sunken, рамка line, фокус — рамка accent. Подпись сверху моно-капсом, подсказка/ошибка снизу. */
@@ -80,19 +80,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, React.TextareaHTMLAttrib
   return <textarea ref={ref} aria-invalid={invalid || undefined} className={cn(control, "min-h-24 resize-y px-4 py-3 leading-[1.6]", className)} {...rest} />;
 });
 
-export const Select = forwardRef<HTMLSelectElement, React.SelectHTMLAttributes<HTMLSelectElement> & { invalid?: boolean; options?: (string | { value: string; label: string })[] }>(
-  function Select({ className, invalid, options, children, ...rest }, ref) {
-    return (
-      <div className="relative">
-        <select ref={ref} aria-invalid={invalid || undefined} className={cn(control, "h-12 cursor-pointer appearance-none pr-10 pl-4", className)} {...rest}>
-          {options?.map((o) => (typeof o === "string" ? <option key={o}>{o}</option> : <option key={o.value} value={o.value}>{o.label}</option>))}
-          {children}
-        </select>
-        <ChevronDown size={16} className="pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 text-text-3" aria-hidden />
-      </div>
-    );
-  },
-);
+export { Select } from "./select";
 
 /** Пароль с показом и подсказкой требований («Буквы, цифры и спецсимвол») */
 export const Password = forwardRef<HTMLInputElement, InputProps>(function Password(props, ref) {

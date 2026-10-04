@@ -283,6 +283,28 @@ body {
   to { opacity: 1; transform: none; }
 }
 
+/* Появление всплывающих меню: сверху вниз от кнопки */
+@keyframes cts-drop {
+  from { opacity: 0; transform: translateY(-6px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes cts-drop-item {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: none; }
+}
+
+@utility animate-drop {
+  transform-origin: top;
+  animation: cts-drop 0.18s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* Пункты меню появляются друг за другом. Порядок — через --i. */
+@utility animate-drop-item {
+  animation: cts-drop-item 0.22s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+  animation-delay: calc(min(var(--i, 0), 8) * 18ms);
+}
+
 @keyframes cts-skeleton {
   0% { background-position: 100% 0; }
   100% { background-position: -100% 0; }
