@@ -3,7 +3,7 @@ import re
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext as _
 
-# те же правила, что в src/features/auth/register-form.tsx фронта
+# те же правила, что в frontend/src/features/auth/register-form.tsx фронта
 NICK_RE = re.compile(r"^[A-Za-z0-9_.-]{3,24}$")
 
 RESERVED_NICKS = frozenset(

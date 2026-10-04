@@ -179,7 +179,7 @@ SIMPLE_JWT = {
     "USER_ID_CLAIM": "user_id",
 }
 JWT_COOKIE: dict[str, Any] = {
-    "ACCESS_NAME": "access",  # имена читает src/proxy.ts фронта
+    "ACCESS_NAME": "access",  # имена читает frontend/src/proxy.ts фронта
     "REFRESH_NAME": "refresh",
     "SAMESITE": "Lax",
     "DOMAIN": env("JWT_COOKIE_DOMAIN", default=None),

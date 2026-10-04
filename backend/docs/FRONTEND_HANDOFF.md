@@ -41,17 +41,17 @@ SSR с cookie, `proxy.ts`. Объём уже сокращён по раздел�
 
 ### Что удалить у себя
 
-- **Онбординг:** страницы `src/app/(auth)/onboarding/games` и `onboarding/accounts`, метод `api.saveOnboarding`
+- **Онбординг:** страницы `frontend/src/app/(auth)/onboarding/games` и `frontend/src/app/(auth)/onboarding/accounts`, метод `api.saveOnboarding`
   в `endpoints.ts`, `"/onboarding"` в `needsAuth` (`proxy.ts`) и в `robots.ts`.
-- **Редирект после подтверждения почты:** `verify/page.tsx` ведёт игрока на `/onboarding/games` — нужен `/me`.
+- **Редирект после подтверждения почты:** `frontend/src/app/(auth)/verify/page.tsx` ведёт игрока на `/onboarding/games` — нужен `/me`.
 - **Типы `SessionUser`** (`types.ts`): поле `timezone`, а в `org.limits` — `staff` и `mailings`.
-  Они читаются только на убранных экранах: `features/settings/billing.tsx` (47) и `features/org/crm/staff.tsx` (42).
+  Они читаются только на убранных экранах: `frontend/src/features/settings/billing.tsx` (47) и `frontend/src/features/org/crm/staff.tsx` (42).
 - **Права** (`permissions.ts`): `mailings.send`, `billing.manage`, `staff.manage` — вместе со ссылками сайдбара
   в `cabinet-shell.tsx` на `/org/mailings`, `/org/staff`, `/org/branding`, `/settings/billing`.
 - **Язык и часовой пояс:** `api.saveLocale` (`/me/locale/`, экран 46) на бэкенде не появится.
   Остаётся только язык (`User.language`, кнопка «Язык» в шапке) — эндпоинт для него будет на этапе 5.
 
-## `.env.local` фронта
+## `frontend/.env.local`
 
 ```env
 NEXT_PUBLIC_API_MOCKS=0

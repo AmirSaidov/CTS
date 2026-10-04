@@ -1,10 +1,10 @@
 """
 Контрактные тесты: запросы ровно как во фронте.
 
-- пути, методы и тела — из src/shared/api/endpoints.ts (auth, me, games, plans);
-- преобразование ключей и заголовки — как в src/shared/api/client.ts
+- пути, методы и тела — из frontend/src/shared/api/endpoints.ts (auth, me, games, plans);
+- преобразование ключей и заголовки — как в frontend/src/shared/api/client.ts
   (тело camelCase → snake_case, ответ snake_case → camelCase, credentials: include);
-- ожидаемые поля ответов — из src/shared/api/types.ts, за вычетом убранного по ТЗ, 14.1
+- ожидаемые поля ответов — из frontend/src/shared/api/types.ts, за вычетом убранного по ТЗ, 14.1
   (онбординг, SessionUser.timezone, org.limits.staff и org.limits.mailings — см. docs/FRONTEND_HANDOFF.md).
 
 Если фронт поменяет контракт, эти тесты нужно обновить вместе с ним.
@@ -25,7 +25,7 @@ from apps.orgs.services import create_organization
 pytestmark = pytest.mark.django_db
 
 
-# ───── копия src/shared/api/client.ts ─────
+# ───── копия frontend/src/shared/api/client.ts ─────
 
 
 def to_camel(s: str) -> str:
@@ -235,7 +235,7 @@ def test_me_for_organizer_matches_session_user(seeded):
     assert set(org["limits"]) == {"tournaments"}
     used, cap = org["limits"]["tournaments"]
     assert isinstance(used, int) and (cap is None or isinstance(cap, int))
-    # имена прав — как в src/shared/lib/permissions.ts; права убранных экранов 40, 42, 43, 47 не отдаются
+    # имена прав — как в frontend/src/shared/lib/permissions.ts; права убранных экранов 40, 42, 43, 47 не отдаются
     assert set(org["permissions"]) <= {"tournaments.manage", "applications.decide", "results.edit", "disputes.resolve"}
 
 

@@ -75,7 +75,7 @@ apps/
 
 ## Подключение фронта
 
-Всё, что нужно фронтендеру — `.env.local`, демо-аккаунты, коды подтверждения, что поправить у себя, —
+Всё, что нужно фронтендеру — `frontend/.env.local`, демо-аккаунты, коды подтверждения, что поправить у себя, —
 в [`docs/FRONTEND_HANDOFF.md`](docs/FRONTEND_HANDOFF.md). Проверка через прокси Next.js:
 `scripts/smoke_next_proxy.py`; контрактные тесты: `apps/core/tests/test_frontend_contract.py`.
 

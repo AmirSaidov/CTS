@@ -8,7 +8,7 @@ from .models import User
 
 
 def me_payload(user: User) -> dict[str, Any]:
-    """Текущий пользователь в форме SessionUser фронта (src/shared/api/types.ts)."""
+    """Текущий пользователь в форме SessionUser фронта (frontend/src/shared/api/types.ts)."""
     membership = primary_membership(user)
     org = None
     if membership:
