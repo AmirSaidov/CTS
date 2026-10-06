@@ -3,18 +3,18 @@
 import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowRight, ChevronRight, Smartphone } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { api } from "@/shared/api/endpoints";
-import { ApiRequestError } from "@/shared/api/client";
+import { ApiRequestError, isReal } from "@/shared/api/client";
 import { toast } from "@/shared/lib/stores";
 import { countdown } from "@/shared/lib/format";
 import { AuthShell, AuthTitle } from "@/shared/layouts/auth-shell";
 import { Button } from "@/shared/ui/button";
 import { OtpInput } from "@/shared/ui/otp";
-import { Divider } from "@/shared/ui/misc";
 import { StepBar } from "@/shared/ui/stepper";
 
-const RESEND_AFTER = 42;
+// бэкенд разрешает повторную отправку раз в 60 секунд
+const RESEND_AFTER = 60;
 
 function Verify() {
   const router = useRouter();
@@ -38,7 +38,10 @@ function Verify() {
     setError(null);
     try {
       await api.verify(value);
-      router.push(isOrg ? "/org" : "/me");
+      // с API кабинет — из профиля (на /verify можно попасть и без ?role, например после входа)
+      const me = isReal("me") ? await api.me().catch(() => null) : null;
+      router.push((me ? me.defaultCabinet === "org" : isOrg) ? "/org" : "/me");
+      router.refresh();
     } catch (e) {
       setError(e instanceof ApiRequestError ? (e.fields.code?.[0] ?? e.message) : "Нет связи с сервером");
       setLoading(false);
@@ -79,9 +82,13 @@ function Verify() {
               type="button"
               className="mono text-[11px] tracking-[0.14em] text-accent-hover uppercase hover:text-text"
               onClick={async () => {
-                await api.resendCode();
-                setLeft(RESEND_AFTER);
-                toast.success("Код отправлен ещё раз");
+                try {
+                  await api.resendCode();
+                  setLeft(RESEND_AFTER);
+                  toast.success("Код отправлен ещё раз");
+                } catch (e) {
+                  toast.error("Не удалось отправить код", e instanceof ApiRequestError ? e.message : "Нет связи с сервером");
+                }
               }}
             >
               Отправить код повторно
@@ -95,15 +102,6 @@ function Verify() {
       <Button variant="primary" size="lg" icon={ArrowRight} loading={loading} block onClick={() => submit()}>
         Подтвердить
       </Button>
-      <Divider label="или" />
-      <button type="button" onClick={() => toast.info("Код отправлен в Telegram", "Если бот не подключён — придёт SMS")} className="flex items-center gap-4 border border-line bg-elev-1 px-5 py-4 text-left transition-colors hover:border-line-strong">
-        <Smartphone size={20} className="text-text-2" aria-hidden />
-        <span className="flex flex-1 flex-col">
-          <span className="font-semibold">Подтвердить по телефону</span>
-          <span className="text-[13px] text-text-2">Получите код в SMS или Telegram</span>
-        </span>
-        <ChevronRight size={16} className="text-text-3" aria-hidden />
-      </button>
     </>
   );
 }

@@ -3,7 +3,7 @@ import { Oswald, Manrope, JetBrains_Mono } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale } from "next-intl/server";
 import { getSession } from "@/shared/auth/session";
-import { USE_MOCKS } from "@/shared/api/client";
+import { isReal } from "@/shared/api/client";
 import { Providers } from "./providers";
 import { DevRoleSwitcher } from "@/features/dev/role-switcher";
 import "./globals.css";
@@ -34,7 +34,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <NextIntlClientProvider>
           <Providers user={user}>
             {children}
-            {USE_MOCKS && <DevRoleSwitcher />}
+            {!isReal("me") && <DevRoleSwitcher />}
           </Providers>
         </NextIntlClientProvider>
       </body>

@@ -66,7 +66,7 @@ export function RegisterForm() {
       <form
         noValidate
         className="flex flex-col gap-5"
-        onSubmit={handleSubmit(async ({ terms: _t, ...body }) => {
+        onSubmit={handleSubmit(async (body) => {
           try {
             await api.register(body);
             setMockRole(body.role === "organizer" ? "organizer" : "player");

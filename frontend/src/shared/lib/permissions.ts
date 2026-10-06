@@ -46,9 +46,11 @@ export const ROLE_MATRIX: Record<OrgRole, readonly OrgAction[]> = {
   moderator: ["applications.decide", "mailings.send"],
 };
 
+/** Права берём из /auth/me/ (org.permissions); матрица — запасной вариант для моков */
 export function can(user: SessionUser | null, action: OrgAction): boolean {
-  const role = user?.org?.role;
-  return !!role && ROLE_MATRIX[role].includes(action);
+  const org = user?.org;
+  if (!org) return false;
+  return org.permissions ? org.permissions.includes(action) : ROLE_MATRIX[org.role].includes(action);
 }
 
 export function isCaptain(user: SessionUser | null, teamSlug?: string) {

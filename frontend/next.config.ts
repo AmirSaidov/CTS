@@ -8,7 +8,8 @@ const DJANGO = process.env.API_INTERNAL_ORIGIN ?? "http://localhost:8000";
 const nextConfig: NextConfig = {
   // Браузер ходит на тот же origin, Next проксирует в Django — httpOnly-cookie работают без CORS.
   async rewrites() {
-    if (process.env.NEXT_PUBLIC_API_MOCKS === "1") return [];
+    // полностью на моках Django не нужен; в смешанном режиме (NEXT_PUBLIC_API_REAL) — нужен
+    if (process.env.NEXT_PUBLIC_API_MOCKS === "1" && !process.env.NEXT_PUBLIC_API_REAL?.trim()) return [];
     return [
       { source: "/api/v1/:path*", destination: `${DJANGO}/api/v1/:path*` },
       { source: "/media/:path*", destination: `${DJANGO}/media/:path*` },

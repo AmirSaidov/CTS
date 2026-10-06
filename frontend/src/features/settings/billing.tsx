@@ -26,8 +26,8 @@ export function BillingScreen({ user, history }: { user: SessionUser; history: H
   const [legal, setLegal] = useState({ name: "[НАЗВАНИЕ ЮРЛИЦА]", inn: "[ИНН]" });
   const usage = [
     { label: "Турниры", used: 7, limit: null as number | null },
-    { label: "Организаторы", used: org.limits.staff[0], limit: org.limits.staff[1] },
-    { label: "Рассылки", used: org.limits.mailings[0], limit: org.limits.mailings[1] },
+    { label: "Организаторы", used: org.limits.staff?.[0] ?? 1, limit: org.limits.staff?.[1] ?? null },
+    { label: "Рассылки", used: org.limits.mailings?.[0] ?? 0, limit: org.limits.mailings?.[1] ?? null },
   ];
   const toPayment = (what: string) => toast.info(`${what}`, "Откроется страница платёжного сервиса [ПЛАТЁЖНЫЙ СЕРВИС]");
 

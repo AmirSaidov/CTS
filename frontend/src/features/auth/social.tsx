@@ -4,19 +4,24 @@ import { USE_MOCKS } from "@/shared/api/client";
 import { toast } from "@/shared/lib/stores";
 import { Divider } from "@/shared/ui/misc";
 
-const PROVIDERS = [
+// MVP: только Discord и Google, и только когда их подключили на бэкенде (ТЗ на урезание, раздел 5)
+const ALL = [
   ["discord", "Discord"],
   ["google", "Google"],
-  ["telegram", "Telegram"],
 ] as const;
+
+/** NEXT_PUBLIC_OAUTH=discord,google — какие провайдеры уже работают на бэкенде; пусто — кнопок нет */
+const ENABLED = new Set((process.env.NEXT_PUBLIC_OAUTH ?? "").split(",").map((s) => s.trim()));
+const PROVIDERS = ALL.filter(([key]) => ENABLED.has(key));
 
 /** OAuth: кнопки ведут на эндпоинты бэкенда; после колбэка — тот же редирект, что при обычном входе (next) */
 export function SocialLogin({ next }: { next?: string }) {
   const api = process.env.NEXT_PUBLIC_API_URL ?? "/api/v1";
+  if (!PROVIDERS.length) return null;
   return (
     <div className="flex flex-col gap-6">
       <Divider label="или" />
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid gap-3" style={{ gridTemplateColumns: `repeat(${PROVIDERS.length}, 1fr)` }}>
         {PROVIDERS.map(([key, label]) => (
           <a
             key={key}

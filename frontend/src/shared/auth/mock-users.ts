@@ -28,7 +28,6 @@ const base: SessionUser = {
   org: null,
   defaultCabinet: "player",
   locale: "ru",
-  timezone: "Asia/Bishkek",
   unread: { notifications: 4, invites: 2 },
 };
 

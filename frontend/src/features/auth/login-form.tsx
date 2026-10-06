@@ -7,7 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { ArrowRight, User } from "lucide-react";
 import { api } from "@/shared/api/endpoints";
-import { ApiRequestError } from "@/shared/api/client";
+import { ApiRequestError, isReal } from "@/shared/api/client";
 import { Button } from "@/shared/ui/button";
 import { Checkbox, Field, Input, Password } from "@/shared/ui/form";
 import { SocialLogin } from "./social";
@@ -35,8 +35,16 @@ export function LoginForm() {
         onSubmit={handleSubmit(async (v) => {
           try {
             await api.login(v);
-            setMockRole(v.login.toLowerCase().includes("org") ? "organizer" : "captain");
-            router.replace(safeNext(next, v.login.toLowerCase().includes("org") ? "/org" : "/me"));
+            let home: string;
+            if (isReal("me")) {
+              const me = await api.me().catch(() => null);
+              home = !me ? "/me" : !me.emailVerified ? "/verify" : me.defaultCabinet === "org" ? "/org" : "/me";
+            } else {
+              const org = v.login.toLowerCase().includes("org");
+              setMockRole(org ? "organizer" : "captain");
+              home = org ? "/org" : "/me";
+            }
+            router.replace(safeNext(next, home));
             router.refresh();
           } catch (e) {
             // ошибка неверного пароля — общая, без уточнения, что именно неверно

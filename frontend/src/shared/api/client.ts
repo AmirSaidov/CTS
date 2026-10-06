@@ -2,6 +2,19 @@ import type { ApiError } from "./types";
 
 export const USE_MOCKS = process.env.NEXT_PUBLIC_API_MOCKS === "1";
 
+/*
+ * Смешанный режим: NEXT_PUBLIC_API_MOCKS=1 + NEXT_PUBLIC_API_REAL=auth,me,games,plans —
+ * перечисленные разделы идут в Django, остальное — моки (бэкенд готов не целиком).
+ * NEXT_PUBLIC_API_MOCKS=0 — всё в Django, список не нужен.
+ */
+export type ApiGroup = "auth" | "me" | "games" | "plans";
+const REAL = new Set((process.env.NEXT_PUBLIC_API_REAL ?? "").split(",").map((s) => s.trim()).filter(Boolean));
+
+/** Раздел ходит в настоящий API (без группы — только при полностью выключенных моках) */
+export const isReal = (group?: ApiGroup) => !USE_MOCKS || (!!group && REAL.has(group));
+/** Хоть один раздел ходит в Django — нужен rewrite /api/v1 и настоящая сессия */
+export const HAS_REAL_API = !USE_MOCKS || REAL.size > 0;
+
 /** На сервере нужен абсолютный адрес Django, в браузере — относительный (через rewrite в next.config). */
 const API_BASE =
   typeof window === "undefined"
@@ -123,10 +136,10 @@ export async function request<T>(path: string, opts: RequestOptions = {}, retrie
   return mapKeys(await res.json(), toCamel) as T;
 }
 
-/** Мок или настоящий запрос — одна точка переключения. */
-export async function call<T>(mock: () => T | Promise<T>, real: () => Promise<T>, latency = 220): Promise<T> {
-  if (!USE_MOCKS) return real();
-  if (typeof window !== "undefined" && latency) await new Promise((r) => setTimeout(r, latency));
+/** Мок или настоящий запрос — одна точка переключения. group — раздел API для смешанного режима. */
+export async function call<T>(mock: () => T | Promise<T>, real: () => Promise<T>, group?: ApiGroup): Promise<T> {
+  if (isReal(group)) return real();
+  if (typeof window !== "undefined") await new Promise((r) => setTimeout(r, 220));
   return structuredClone(await mock());
 }
 

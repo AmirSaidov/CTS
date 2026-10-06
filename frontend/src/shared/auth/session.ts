@@ -1,7 +1,7 @@
 import "server-only";
 import { cache } from "react";
 import { cookies } from "next/headers";
-import { USE_MOCKS } from "@/shared/api/client";
+import { isReal } from "@/shared/api/client";
 import "@/shared/api/server";
 import { api } from "@/shared/api/endpoints";
 import type { SessionUser } from "@/shared/api/types";
@@ -12,7 +12,7 @@ export const MOCK_ROLE_COOKIE = "cts_mock_role";
 /** Текущий пользователь для серверных компонентов. Кэшируется в пределах одного запроса. */
 export const getSession = cache(async (): Promise<SessionUser | null> => {
   const store = await cookies();
-  if (USE_MOCKS) {
+  if (!isReal("me")) {
     const role = store.get(MOCK_ROLE_COOKIE)?.value as MockRole | undefined;
     return mockUser(role && MOCK_ROLES.includes(role) ? role : "organizer");
   }

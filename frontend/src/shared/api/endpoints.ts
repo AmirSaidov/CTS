@@ -63,8 +63,8 @@ function filterTournaments(f: TournamentFilters) {
 
 export const api = {
   // ───── справочники ─────
-  games: (o?: Srv) => call<Game[]>(() => db.GAMES, () => request("/games/", { revalidate: 3600, ...o })),
-  plans: (o?: Srv) => call<PlanInfo[]>(() => db.PLANS, () => request("/plans/", { revalidate: 3600, ...o })),
+  games: (o?: Srv) => call<Game[]>(() => db.GAMES, () => request("/games/", { revalidate: 3600, ...o }), "games"),
+  plans: (o?: Srv) => call<PlanInfo[]>(() => db.PLANS, () => request("/plans/", { revalidate: 3600, ...o }), "plans"),
 
   // ───── публичная часть ─────
   tournaments: (f: TournamentFilters = {}, o?: Srv) =>
@@ -124,20 +124,25 @@ export const api = {
     call(() => ({ ok: true }), () => request<{ ok: boolean }>("/contact/", { method: "POST", body })),
 
   // ───── авторизация ─────
-  me: (o?: Srv) => call<SessionUser>(() => mockError(401, "Не авторизован"), () => request("/auth/me/", { ...o })),
+  me: (o?: Srv) => call<SessionUser>(() => mockError(401, "Не авторизован"), () => request("/auth/me/", { ...o }), "me"),
   login: (body: { login: string; password: string; remember: boolean }) =>
-    call(() => (body.password.length < 4 ? mockError(400, "Неверная почта/ник или пароль") : { ok: true }), () => request<{ ok: true }>("/auth/login/", { method: "POST", body })),
-  register: (body: { role: "player" | "organizer"; nick: string; email: string; password: string }) =>
-    call(() => (body.nick.toLowerCase() === "aktan" ? mockError(400, "Проверьте поля", { nick: ["Ник уже занят"] }) : { ok: true }), () =>
-      request<{ ok: true }>("/auth/register/", { method: "POST", body }),
+    call(() => (body.password.length < 4 ? mockError(400, "Неверная почта/ник или пароль") : { ok: true }), () => request<{ ok: true }>("/auth/login/", { method: "POST", body }), "auth"),
+  // terms обязателен: бэкенд сохраняет версию документов и время согласия
+  register: (body: { role: "player" | "organizer"; nick: string; email: string; password: string; terms: true }) =>
+    call(
+      () => (body.nick.toLowerCase() === "aktan" ? mockError(400, "Проверьте поля", { nick: ["Ник уже занят"] }) : { ok: true }),
+      () => request<{ ok: true }>("/auth/register/", { method: "POST", body }),
+      "auth",
     ),
-  verify: (code: string) => call(() => (code === "000000" ? mockError(400, "Неверный код", { code: ["Неверный код"] }) : { ok: true }), () => request<{ ok: true }>("/auth/verify/", { method: "POST", body: { code } })),
-  resendCode: () => call(() => ({ ok: true }), () => request<{ ok: true }>("/auth/verify/resend/", { method: "POST" })),
-  forgot: (email: string) => call(() => ({ ok: true }), () => request<{ ok: true }>("/auth/password/forgot/", { method: "POST", body: { email } })),
+  verify: (code: string) =>
+    call(() => (code === "000000" ? mockError(400, "Неверный код", { code: ["Неверный код"] }) : { ok: true }), () => request<{ ok: true }>("/auth/verify/", { method: "POST", body: { code } }), "auth"),
+  resendCode: () => call(() => ({ ok: true }), () => request<{ ok: true }>("/auth/verify/resend/", { method: "POST" }), "auth"),
+  forgot: (email: string) => call(() => ({ ok: true }), () => request<{ ok: true }>("/auth/password/forgot/", { method: "POST", body: { email } }), "auth"),
   reset: (token: string, password: string) =>
-    call(() => (token === "expired" ? mockError(410, "Ссылка устарела") : { ok: true }), () => request<{ ok: true }>("/auth/password/reset/", { method: "POST", body: { token, password } })),
-  logout: () => call(() => ({ ok: true }), () => request<{ ok: true }>("/auth/logout/", { method: "POST" })),
-  checkNick: (nick: string) => call(() => ({ available: !["aktan", "admin", "cts"].includes(nick.toLowerCase()) }), () => request<{ available: boolean }>("/auth/nick-available/", { query: { nick } })),
+    call(() => (token === "expired" ? mockError(410, "Ссылка устарела") : { ok: true }), () => request<{ ok: true }>("/auth/password/reset/", { method: "POST", body: { token, password } }), "auth"),
+  logout: () => call(() => ({ ok: true }), () => request<{ ok: true }>("/auth/logout/", { method: "POST" }), "auth"),
+  checkNick: (nick: string) =>
+    call(() => ({ available: !["aktan", "admin", "cts"].includes(nick.toLowerCase()) }), () => request<{ available: boolean }>("/auth/nick-available/", { query: { nick } }), "auth"),
 
   // ───── настройки аккаунта ─────
   sessions: () => call<AuthSession[]>(() => db.SESSIONS, () => request("/me/sessions/")),

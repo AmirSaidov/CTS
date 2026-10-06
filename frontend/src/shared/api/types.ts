@@ -381,10 +381,12 @@ export interface SessionUser {
   isPlatformAdmin: boolean;
   captainOf: string | null; // slug команды
   team: TeamRef | null;
-  org: { slug: string; name: string; role: OrgRole; plan: Plan; limits: { tournaments: [number, number | null]; staff: [number, number]; mailings: [number, number] } } | null;
+  city?: string;
+  avatar?: string | null;
+  /** permissions — права роли от бэкенда (имена как в shared/lib/permissions.ts). Лимиты staff и mailings — только в моках (экраны 42, 47 — v2/v3) */
+  org: { slug: string; name: string; role: OrgRole; plan: Plan; permissions?: string[]; limits: { tournaments: [number, number | null]; staff?: [number, number]; mailings?: [number, number] } } | null;
   defaultCabinet: "player" | "org";
   locale: "ru" | "ky" | "en";
-  timezone: string;
   unread: { notifications: number; invites: number };
 }
 

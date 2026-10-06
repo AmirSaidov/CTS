@@ -1,17 +1,18 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { isDeferredRoute } from "@/shared/lib/features";
+import { isReal } from "@/shared/api/client";
 
 /*
  * Защита маршрутов по роли (Next 16: бывший middleware).
  * Только скрывает и редиректит — окончательно права проверяет Django.
  *
  * Роль берём из payload JWT в httpOnly-cookie `access` (без проверки подписи — это
- * лишь подсказка для роутинга). В режиме моков — из cookie `cts_mock_role`.
+ * лишь подсказка для роутинга). Пока вход не идёт через Django (моки) — из cookie `cts_mock_role`.
  */
 
 type Role = { authed: boolean; player: boolean; organizer: boolean; admin: boolean; verified: boolean };
 
-const MOCKS = process.env.NEXT_PUBLIC_API_MOCKS === "1";
+const MOCK_SESSION = !isReal("auth");
 
 function decodeJwt(token: string): Record<string, unknown> | null {
   try {
@@ -23,7 +24,7 @@ function decodeJwt(token: string): Record<string, unknown> | null {
 }
 
 function readRole(req: NextRequest): Role {
-  if (MOCKS) {
+  if (MOCK_SESSION) {
     const r = req.cookies.get("cts_mock_role")?.value ?? "organizer";
     return {
       authed: r !== "guest",
